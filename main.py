@@ -23,6 +23,7 @@ num_epochs = 25
 loss_function = nn.BCELoss()
 
 optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=lr)
+
 optimizer_generator = torch.optim.Adam(generator.parameters(), lr=lr)
 
 # Training the models
