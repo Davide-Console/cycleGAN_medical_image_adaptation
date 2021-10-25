@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class Discriminator(nn.Module):
     def __init__(self):
-        super().__init__()
+        super().__init__() # parent class initialization
         
         # structure
         self.conv1 = nn.Conv2d(1, 4, 5)
@@ -33,7 +33,7 @@ class Discriminator(nn.Module):
     
 class Generator(nn.Module):
     def __init__(self):
-        super().__init__()
+        super().__init__() # parent class initialization
         
         # structure
         self.trans1 = nn.ConvTranspose2d(100, 1024, 3)
