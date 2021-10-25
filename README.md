@@ -1,4 +1,4 @@
-# HRV in nenoates for  2021/2022 Biomedical Signal Processing course
+# GAN for  2021/2022 NECSTLab Project
 
 
 - ###  Davide Console ([@Davide-Console](https://github.com/Davide-Console)) <br> davide.console@mail.polimi.it
