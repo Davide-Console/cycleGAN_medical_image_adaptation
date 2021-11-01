@@ -86,7 +86,7 @@ for i in range(5):
     plt.show()
 
 # Models load
-nc = 3
+nc = 1
 ndf = 64
 D_A = Discriminator(nc, ndf)
 D_B = Discriminator(nc, ndf)
