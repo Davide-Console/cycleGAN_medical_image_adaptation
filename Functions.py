@@ -1,18 +1,29 @@
 # Packages
+import numpy as np
 import torch
+from skimage import io
+import matplotlib.pyplot as plt
+
+def image_viewer(image):
+    plt.imshow(np.transpose(image, (1, 2, 0)))
+
 
 # Loss Functions
+
+
 def LSGAN_D(real, fake):
-  return (torch.mean((real - 1)**2) + torch.mean(fake**2))
+    return (torch.mean((real - 1)**2) + torch.mean(fake**2))
+
 
 def LSGAN_G(fake):
-  return  torch.mean((fake - 1)**2)
+    return (torch.mean((fake - 1)**2))
+
 
 # Train
 
 def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_B, 
           optimizer_D_A, optimizer_D_B, dataloader_train_CT, 
-          dataloader_train_MR, criterion_Im, old = True):
+          dataloader_train_MR, criterion_Im, old=True):
     
     # Lists to keep track of progress
     # img_list = []
@@ -44,10 +55,11 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
     print("Starting Training Loop...")
     # For each epoch
     for epoch in range(num_epochs):
-    
+        print("epoch")
+        print(epoch)
         # For each batch in the dataloader
         for  i,(data_CT, data_MR) in enumerate(zip(dataloader_train_CT, dataloader_train_MR),0):
-        
+            print(i)
             # Set model input
             A_real = data_CT[0]
             B_real = data_MR[0]
@@ -65,7 +77,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             # Discriminator A
             optimizer_D_A.zero_grad()
             if((iters > 0 or epoch > 0) and old and iters % 3 == 0):
-              rand_int = torch.randint(5, old_A_fake.shape[0]-1)
+              rand_int = torch.randint(5, old_A_fake.shape[0]-1, (1,1))
               Disc_loss_A = LSGAN_D(D_A(A_real), D_A(old_A_fake[rand_int-5:rand_int].detach()))
               D_A_losses.append(Disc_loss_A.item())
             else:
@@ -80,7 +92,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
     
             optimizer_D_B.zero_grad()
             if((iters > 0 or epoch > 0) and old and iters % 3 == 0):
-              rand_int = torch.randint(5, old_B_fake.shape[0]-1)
+              rand_int = torch.randint(5, old_B_fake.shape[0]-1, (1,1))
               Disc_loss_B =  LSGAN_D(D_B(B_real), D_B(old_B_fake[rand_int-5:rand_int].detach()))
               D_B_losses.append(Disc_loss_B.item())
             else:
@@ -132,7 +144,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
               old_B_fake = B_fake.clone()
               old_A_fake = A_fake.clone()
             elif (old_B_fake.shape[0] == bs*5 and B_fake.shape[0]==bs):
-              rand_int = random.randint(5, 24)
+              rand_int = torch.randint(5, 24, (1,1))
               old_B_fake[rand_int-5:rand_int] = B_fake.clone()
               old_A_fake[rand_int-5:rand_int] = A_fake.clone()
             elif(old_B_fake.shape[0]< 25):
