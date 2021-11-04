@@ -23,7 +23,7 @@ def LSGAN_G(fake):
 
 def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_B, 
           optimizer_D_A, optimizer_D_B, dataloader_train_CT, 
-          dataloader_train_MR, criterion_Im, old=True):
+          dataloader_train_MR, criterion_Im, device, old=True):
     
     # Lists to keep track of progress
     # img_list = []
@@ -61,9 +61,9 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
         for  i,(data_CT, data_MR) in enumerate(zip(dataloader_train_CT, dataloader_train_MR),0):
             print(i)
             # Set model input
-            A_real = data_CT[0]
-            B_real = data_MR[0]
-          
+            A_real = data_CT[0].to(device=device)
+            B_real = data_MR[0].to(device=device)
+
             #tensor_ones = torch.ones([A_real.shape[0],1,14,14])
             #tensor_zeros = torch.zeros([A_real.shape[0],1,14,14])
     

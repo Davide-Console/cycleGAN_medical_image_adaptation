@@ -19,11 +19,22 @@ import Functions as Foo
 # Random seed
 torch.manual_seed(123)
 
+# Set device
+torch.cuda.empty_cache()
+device = "cpu"
+# if torch.cuda.is_available():
+#     device = torch.device("cuda")
+#     print("cuda")
+# else:
+#     device = torch.device("cpu")
+#     print("cpu")
+# torch.cuda.memory_summary(device=device, abbreviated=False)
+
 # DATA PREPARATION
 image_size = (256, 256)
 bs = 5  # batch size
+# batch number = train dataset / batch size
 workers = 0  # sub processes for data loading (per ora mi funziona solo con =0)
-
 
 dataroot = 'Data/CT/Train/'  # Directory con le immagini
 dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
@@ -106,15 +117,15 @@ plt.show()
 nc = 1  # No channels = 1 (Grayscale)
 ndf = 64
 
-D_A = Discriminator(nc, ndf)
-D_B = Discriminator(nc, ndf)
+D_A = Discriminator(nc, ndf).to(device=device)
+D_B = Discriminator(nc, ndf).to(device=device)
 
-G_A2B = Generator()
-G_B2A = Generator()
+G_A2B = Generator().to(device=device)
+G_B2A = Generator().to(device=device)
 
 # Parameters' initialization
 lr = 0.0002
-num_epochs = 1
+num_epochs = 3
 
 # Loss function
 criterion_Im = torch.nn.L1Loss()
@@ -130,14 +141,14 @@ optimizer_G_B2A = torch.optim.Adam(G_B2A.parameters(), lr=lr)
 # Training the models
 Foo.Train(num_epochs, bs, G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A, D_A, D_B,
           optimizer_D_A, optimizer_D_B, dataloader_train_CT,
-          dataloader_train_MR, criterion_Im)
+          dataloader_train_MR, criterion_Im, device)
 
 # GENERATE A PICTURE
 # load data
 data_CT = next(iter(dataloader_test_CT))
 data_MR = next(iter(dataloader_test_MR))
-A_real = data_CT[0]
-B_real = data_MR[0]
+A_real = data_CT[0].to(device=device)
+B_real = data_MR[0].to(device=device)
 
 # generate images
 B_fake = G_A2B(A_real)
