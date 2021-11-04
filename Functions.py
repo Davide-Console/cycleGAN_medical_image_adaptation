@@ -1,10 +1,10 @@
 # Packages
-import numpy as np
 import torch
-from skimage import io
+import numpy as np
 import matplotlib.pyplot as plt
 
 def image_viewer(image):
+    image = image.detach().numpy()
     plt.imshow(np.transpose(image, (1, 2, 0)))
 
 
@@ -155,9 +155,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             del data_MR, data_CT, A_real, B_real, A_fake, B_fake
     
     
-            if iters % 50 == 0:
-          
-              print('[%d/%d]\tFDL_A2B: %.4f\tFDL_B2A: %.4f\tCL_A: %.4f\tCL_B: %.4f\tID_B2A: %.4f\tID_A2B: %.4f\tLoss_D_A: %.4f\tLoss_D_A: %.4f'
+            print('[%d/%d]\tFDL_A2B: %.4f\tFDL_B2A: %.4f\tCL_A: %.4f\tCL_B: %.4f\tID_B2A: %.4f\tID_A2B: %.4f\tLoss_D_A: %.4f\tLoss_D_B: %.4f'
                           % (epoch+1, num_epochs, Fool_disc_loss_A2B, Fool_disc_loss_B2A,Cycle_loss_A,Cycle_loss_B,Id_loss_B2A,
                               Id_loss_A2B, Disc_loss_A.item(), Disc_loss_B.item()))
             

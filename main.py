@@ -13,17 +13,15 @@ import Functions as Foo
 
 
 # TODO
-# sistemare training loop
-# sistemare/aggiungere salvataggio finale di modelli
-# aggiungere generazione finale di immagini col test set
-
+# sistemare e commentare training loop
+# sistemare/aggiungere salvataggio finale di modelli (??)
 
 # Random seed
 torch.manual_seed(123)
 
-# Data load
+# DATA PREPARATION
 image_size = (256, 256)
-bs = 4  # batch size
+bs = 5  # batch size
 workers = 0  # sub processes for data loading (per ora mi funziona solo con =0)
 
 
@@ -33,18 +31,14 @@ dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose(
                                transforms.ToTensor(),
                                transforms.Normalize(0, 1),
                               ]))  # convert to greyscale and normalize images
-# img loading
+# image loading
 dataloader_train_CT = torchdata.DataLoader(dataset_CT_train, batch_size=bs, shuffle=True, num_workers=workers)
 
 real_batch = next(iter(dataloader_train_CT))  # equivalent to a "for cycle" for batch load
 
-fig = plt.figure()
-
 for i in range(len(real_batch[0])):
     sample = real_batch[0][i]  # Batch[No batch][No img]
-    print(sample.shape)
     ax = plt.subplot(1, len(real_batch[0]), i + 1)
-
     ax.axis('off')
     Foo.image_viewer(sample)
 
@@ -63,9 +57,7 @@ real_batch = next(iter(dataloader_test_CT))
 
 for i in range(len(real_batch[0])):
     sample = real_batch[0][i]
-    print(sample.shape)
     ax = plt.subplot(1, len(real_batch[0]), i + 1)
-
     ax.axis('off')
     Foo.image_viewer(sample)
 
@@ -80,13 +72,11 @@ dataset_MR_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose(
 
 dataloader_train_MR = torch.utils.data.DataLoader(dataset_MR_train, batch_size=bs, shuffle=True, num_workers=workers)
 
-real_batch = next(iter(dataloader_train_MR))  # equivalent to a for cycle for batch load
+real_batch = next(iter(dataloader_train_MR))
 
 for i in range(len(real_batch[0])):
     sample = real_batch[0][i]
-    print(sample.shape)
     ax = plt.subplot(1, len(real_batch[0]), i + 1)
-
     ax.axis('off')
     Foo.image_viewer(sample)
 
@@ -105,30 +95,30 @@ real_batch = next(iter(dataloader_test_MR))
 
 for i in range(len(real_batch[0])):
     sample = real_batch[0][i]
-    print(sample.shape)
     ax = plt.subplot(1, len(real_batch[0]), i + 1)
-
     ax.axis('off')
     Foo.image_viewer(sample)
 
 plt.show()
 
-# Models' load
+# TRAINING MODELS
+# Networks' initialization
 nc = 1  # No channels = 1 (Grayscale)
 ndf = 64
+
 D_A = Discriminator(nc, ndf)
 D_B = Discriminator(nc, ndf)
 
 G_A2B = Generator()
 G_B2A = Generator()
 
-# Parameters initialization
+# Parameters' initialization
 lr = 0.0002
-num_epochs = 25
+num_epochs = 1
 
 # Loss function
 criterion_Im = torch.nn.L1Loss()
-# Beta1 hyperparam for Adam optimizers
+# Beta1 hyperparam for Adam optimizers (??? non so se utilizzarlo)
 # beta1 = 0.5
 
 optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=lr)
@@ -143,3 +133,49 @@ Foo.Train(num_epochs, bs, G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A, D_A, D
           dataloader_train_MR, criterion_Im)
 
 # GENERATE A PICTURE
+# load data
+data_CT = next(iter(dataloader_test_CT))
+data_MR = next(iter(dataloader_test_MR))
+A_real = data_CT[0]
+B_real = data_MR[0]
+
+# generate images
+B_fake = G_A2B(A_real)
+A_fake = G_B2A(B_real)
+
+# plot images
+for i in range(len(A_real)):
+    # In the plot:
+    # 1st line: Style
+    # 2nd line: Starting image
+    # 3rd line: Generated image
+    sample1 = A_real[i]
+    sample2 = B_real[i]
+    sample3 = A_fake[i]
+    ax = plt.subplot(3, len(A_real), i + 1)
+    ax.axis('off')
+    Foo.image_viewer(sample1)
+    ax = plt.subplot(3, len(A_real), len(A_real) + i + 1)
+    ax.axis('off')
+    Foo.image_viewer(sample2)
+    ax = plt.subplot(3, len(A_real), 2*len(A_real) + i + 1)
+    ax.axis('off')
+    Foo.image_viewer(sample3)
+
+plt.show()
+
+for i in range(len(B_real)):
+    sample1 = B_real[i]
+    sample2 = A_real[i]
+    sample3 = B_fake[i]
+    ax = plt.subplot(3, len(B_real), i + 1)
+    ax.axis('off')
+    Foo.image_viewer(sample1)
+    ax = plt.subplot(3, len(B_real), len(B_real) + i + 1)
+    ax.axis('off')
+    Foo.image_viewer(sample2)
+    ax = plt.subplot(3, len(B_real), 2*len(B_real) + i + 1)
+    ax.axis('off')
+    Foo.image_viewer(sample3)
+
+plt.show()
