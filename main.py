@@ -1,4 +1,5 @@
 # Packages
+import multiprocessing
 import matplotlib.pyplot as plt
 
 import torch
@@ -13,180 +14,194 @@ import Functions as Foo
 
 
 # TODO
-# sistemare e commentare training loop
-# sistemare/aggiungere salvataggio finale di modelli (??)
+# . capire se e perchè è utile 'Function' line 143
+# . sistemare e commentare training loop
+# . sistemare/aggiungere salvataggio finale di modelli (??)
+# . aggiungere gridsearch (ottimizzatore di hyperparameters) (esiste per neural networks? immagino di si) Molto costosa.
+#   Cercare alternative
 
-# Random seed
-torch.manual_seed(123)
 
-# Set device
-torch.cuda.empty_cache()
-device = "cpu"
-# if torch.cuda.is_available():
-#     device = torch.device("cuda")
-#     print("cuda")
-# else:
-#     device = torch.device("cpu")
-#     print("cpu")
-# torch.cuda.memory_summary(device=device, abbreviated=False)
+def main():
+    # Add support for when a program which uses multiprocessing has been frozen to produce a Windows executable
+    multiprocessing.freeze_support()
 
-# DATA PREPARATION
-image_size = (256, 256)
-bs = 5  # batch size
-# batch number = train dataset / batch size
-workers = 0  # sub processes for data loading (per ora mi funziona solo con =0)
+    # Random seed
+    torch.manual_seed(123)
 
-dataroot = 'Data/CT/Train/'  # Directory con le immagini
-dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
-                               transforms.Grayscale(),
-                               transforms.ToTensor(),
-                               transforms.Normalize(0, 1),
-                              ]))  # convert to greyscale and normalize images
-# image loading
-dataloader_train_CT = torchdata.DataLoader(dataset_CT_train, batch_size=bs, shuffle=True, num_workers=workers)
+    # Set device
+    torch.cuda.empty_cache()
 
-real_batch = next(iter(dataloader_train_CT))  # equivalent to a "for cycle" for batch load
+    '''    QUANDO CUDA NON DARA' PROBLEMI:
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print("cuda")
+    else:
+        device = torch.device("cpu")
+        print("cpu")'''
 
-for i in range(len(real_batch[0])):
-    sample = real_batch[0][i]  # Batch[No batch][No img]
-    ax = plt.subplot(1, len(real_batch[0]), i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample)
+    device = torch.device("cpu")
 
-plt.show()
+    # DATA PREPARATION
+    image_size = (256, 256)
+    bs = 5
+    # batch number = train dataset / batch size
+    workers = 2  # sub processes for data loading
 
-dataroot = 'Data/CT/Test/'
-dataset_CT_test = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
-                               transforms.Grayscale(),
-                               transforms.ToTensor(),
-                               transforms.Normalize(0, 1),
-                              ]))
+    dataroot = 'Data/CT/Train/'  # Directory con le immagini
+    dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
+                                   transforms.Grayscale(),
+                                   transforms.ToTensor(),
+                                   transforms.Normalize(0, 1),
+                                  ]))  # convert to greyscale and normalize images
+    # image loading
+    dataloader_train_CT = torchdata.DataLoader(dataset_CT_train, batch_size=bs, shuffle=True, num_workers=workers)
 
-dataloader_test_CT = torchdata.DataLoader(dataset_CT_test, batch_size=bs, shuffle=True, num_workers=workers)
+    real_batch = next(iter(dataloader_train_CT))  # equivalent to a "for cycle" for batch load
 
-real_batch = next(iter(dataloader_test_CT))
+    for i in range(len(real_batch[0])):
+        sample = real_batch[0][i]  # Batch[No batch][No img]
+        ax = plt.subplot(1, len(real_batch[0]), i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample)
 
-for i in range(len(real_batch[0])):
-    sample = real_batch[0][i]
-    ax = plt.subplot(1, len(real_batch[0]), i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample)
+    plt.show()
 
-plt.show()
+    dataroot = 'Data/CT/Test/'
+    dataset_CT_test = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
+                                   transforms.Grayscale(),
+                                   transforms.ToTensor(),
+                                   transforms.Normalize(0, 1),
+                                  ]))
 
-dataroot = 'Data/MRI/Train/'
-dataset_MR_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
-                               transforms.Grayscale(),
-                               transforms.ToTensor(),
-                               transforms.Normalize(0, 1),
-                              ]))
+    dataloader_test_CT = torchdata.DataLoader(dataset_CT_test, batch_size=bs, shuffle=True, num_workers=workers)
 
-dataloader_train_MR = torch.utils.data.DataLoader(dataset_MR_train, batch_size=bs, shuffle=True, num_workers=workers)
+    real_batch = next(iter(dataloader_test_CT))
 
-real_batch = next(iter(dataloader_train_MR))
+    for i in range(len(real_batch[0])):
+        sample = real_batch[0][i]
+        ax = plt.subplot(1, len(real_batch[0]), i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample)
 
-for i in range(len(real_batch[0])):
-    sample = real_batch[0][i]
-    ax = plt.subplot(1, len(real_batch[0]), i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample)
+    plt.show()
 
-plt.show()
+    dataroot = 'Data/MRI/Train/'
+    dataset_MR_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
+                                   transforms.Grayscale(),
+                                   transforms.ToTensor(),
+                                   transforms.Normalize(0, 1),
+                                  ]))
 
-dataroot = 'Data/MRI/Test/'
-dataset_MR_test = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
-                               transforms.Grayscale(),
-                               transforms.ToTensor(),
-                               transforms.Normalize(0, 1),
-                              ]))
+    dataloader_train_MR = torch.utils.data.DataLoader(dataset_MR_train, batch_size=bs, shuffle=True, num_workers=workers)
 
-dataloader_test_MR = torch.utils.data.DataLoader(dataset_MR_test, batch_size=bs, shuffle=True, num_workers=workers)
+    real_batch = next(iter(dataloader_train_MR))
 
-real_batch = next(iter(dataloader_test_MR))
+    for i in range(len(real_batch[0])):
+        sample = real_batch[0][i]
+        ax = plt.subplot(1, len(real_batch[0]), i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample)
 
-for i in range(len(real_batch[0])):
-    sample = real_batch[0][i]
-    ax = plt.subplot(1, len(real_batch[0]), i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample)
+    plt.show()
 
-plt.show()
+    dataroot = 'Data/MRI/Test/'
+    dataset_MR_test = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
+                                   transforms.Grayscale(),
+                                   transforms.ToTensor(),
+                                   transforms.Normalize(0, 1),
+                                  ]))
 
-# TRAINING MODELS
-# Networks' initialization
-nc = 1  # No channels = 1 (Grayscale)
-ndf = 64
+    dataloader_test_MR = torch.utils.data.DataLoader(dataset_MR_test, batch_size=bs, shuffle=True, num_workers=workers)
 
-D_A = Discriminator(nc, ndf).to(device=device)
-D_B = Discriminator(nc, ndf).to(device=device)
+    real_batch = next(iter(dataloader_test_MR))
 
-G_A2B = Generator().to(device=device)
-G_B2A = Generator().to(device=device)
+    for i in range(len(real_batch[0])):
+        sample = real_batch[0][i]
+        ax = plt.subplot(1, len(real_batch[0]), i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample)
 
-# Parameters' initialization
-lr = 0.0002
-num_epochs = 3
+    plt.show()
 
-# Loss function
-criterion_Im = torch.nn.L1Loss()
-# Beta1 hyperparam for Adam optimizers (??? non so se utilizzarlo)
-# beta1 = 0.5
+    # TRAINING MODELS
+    # Networks' initialization
+    nc = 1  # No channels = 1 (Grayscale)
+    ndf = 64
 
-optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=lr)
-optimizer_D_B = torch.optim.Adam(D_B.parameters(), lr=lr)
+    D_A = Discriminator(nc, ndf).to(device=device)
+    D_B = Discriminator(nc, ndf).to(device=device)
 
-optimizer_G_A2B = torch.optim.Adam(G_A2B.parameters(), lr=lr)
-optimizer_G_B2A = torch.optim.Adam(G_B2A.parameters(), lr=lr)
+    G_A2B = Generator().to(device=device)
+    G_B2A = Generator().to(device=device)
 
-# Training the models
-Foo.Train(num_epochs, bs, G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A, D_A, D_B,
-          optimizer_D_A, optimizer_D_B, dataloader_train_CT,
-          dataloader_train_MR, criterion_Im, device)
+    # Parameters' initialization
+    lr = 0.0002
+    num_epochs = 1
 
-# GENERATE A PICTURE
-# load data
-data_CT = next(iter(dataloader_test_CT))
-data_MR = next(iter(dataloader_test_MR))
-A_real = data_CT[0].to(device=device)
-B_real = data_MR[0].to(device=device)
+    # Loss function
+    criterion_Im = torch.nn.L1Loss()
+    # Beta1 hyperparam for Adam optimizers (??? non so se utilizzarlo)
+    # beta1 = 0.5
 
-# generate images
-B_fake = G_A2B(A_real)
-A_fake = G_B2A(B_real)
+    optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=lr)
+    optimizer_D_B = torch.optim.Adam(D_B.parameters(), lr=lr)
 
-# plot images
-for i in range(len(A_real)):
-    # In the plot:
-    # 1st line: Style
-    # 2nd line: Starting image
-    # 3rd line: Generated image
-    sample1 = A_real[i]
-    sample2 = B_real[i]
-    sample3 = A_fake[i]
-    ax = plt.subplot(3, len(A_real), i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample1)
-    ax = plt.subplot(3, len(A_real), len(A_real) + i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample2)
-    ax = plt.subplot(3, len(A_real), 2*len(A_real) + i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample3)
+    optimizer_G_A2B = torch.optim.Adam(G_A2B.parameters(), lr=lr)
+    optimizer_G_B2A = torch.optim.Adam(G_B2A.parameters(), lr=lr)
 
-plt.show()
+    # Training the models
+    Foo.Train(num_epochs, bs, G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A, D_A, D_B,
+              optimizer_D_A, optimizer_D_B, dataloader_train_CT,
+              dataloader_train_MR, criterion_Im, device)
 
-for i in range(len(B_real)):
-    sample1 = B_real[i]
-    sample2 = A_real[i]
-    sample3 = B_fake[i]
-    ax = plt.subplot(3, len(B_real), i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample1)
-    ax = plt.subplot(3, len(B_real), len(B_real) + i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample2)
-    ax = plt.subplot(3, len(B_real), 2*len(B_real) + i + 1)
-    ax.axis('off')
-    Foo.image_viewer(sample3)
+    # GENERATE A PICTURE
+    # load data
+    data_CT = next(iter(dataloader_test_CT))
+    data_MR = next(iter(dataloader_test_MR))
+    A_real = data_CT[0].to(device=device)
+    B_real = data_MR[0].to(device=device)
 
-plt.show()
+    # generate images
+    B_fake = G_A2B(A_real)
+    A_fake = G_B2A(B_real)
+
+    # plot images
+    for i in range(len(A_real)):
+        # In the plot:
+        # 1st line: Style
+        # 2nd line: Starting image
+        # 3rd line: Generated image
+        sample1 = A_real[i]
+        sample2 = B_real[i]
+        sample3 = A_fake[i]
+        ax = plt.subplot(3, len(A_real), i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample1)
+        ax = plt.subplot(3, len(A_real), len(A_real) + i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample2)
+        ax = plt.subplot(3, len(A_real), 2*len(A_real) + i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample3)
+
+    plt.show()
+
+    for i in range(len(B_real)):
+        sample1 = B_real[i]
+        sample2 = A_real[i]
+        sample3 = B_fake[i]
+        ax = plt.subplot(3, len(B_real), i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample1)
+        ax = plt.subplot(3, len(B_real), len(B_real) + i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample2)
+        ax = plt.subplot(3, len(B_real), 2*len(B_real) + i + 1)
+        ax.axis('off')
+        Foo.image_viewer(sample3)
+
+    plt.show()
+
+
+if __name__ == '__main__':
+    main()

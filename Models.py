@@ -6,6 +6,7 @@ import torch.nn.functional as foo
 
 
 class ResBlock(nn.Module):
+    # Transformation layers
     def __init__(self, f):
         super(ResBlock, self).__init__()
         self.conv = nn.Sequential(nn.Conv2d(f, f, 3, 1, 1), nn.InstanceNorm2d(f), nn.ReLU(),
@@ -17,6 +18,9 @@ class ResBlock(nn.Module):
 
 
 class Generator(nn.Module):
+    # PART 1: Encoder --> converts image feature to latent space
+    # PART 2: Transformation
+    # PART 3: Decoder --> assembles latent representation
     def __init__(self, f=64, blocks=6):
         super(Generator, self).__init__()
         layers = [nn.ReflectionPad2d(3),
@@ -38,7 +42,8 @@ class Generator(nn.Module):
 # Discriminator
 
 
-class Discriminator(nn.Module):  
+class Discriminator(nn.Module):
+    # Deep Convolutional Network
     def __init__(self, nc, ndf):
         super(Discriminator, self).__init__()
         self.main = nn.Sequential(
