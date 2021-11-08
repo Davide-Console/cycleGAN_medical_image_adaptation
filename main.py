@@ -18,7 +18,7 @@ import Functions as Foo
 # . sistemare e commentare training loop
 # . sistemare/aggiungere salvataggio finale di modelli (??)
 # . aggiungere gridsearch (ottimizzatore di hyperparameters) (esiste per neural networks? immagino di si) Molto costosa.
-#   Cercare alternative
+#   Cercare alternative (alvin grid search)
 
 
 def main():
@@ -37,13 +37,13 @@ def main():
         print("cuda")
     else:
         device = torch.device("cpu")
-        print("cpu")'''
+        print("cpu")   '''
 
     device = torch.device("cpu")
 
     # DATA PREPARATION
     image_size = (256, 256)
-    bs = 5
+    bs = 5  # Batch size
     # batch number = train dataset / batch size
     workers = 2  # sub processes for data loading
 
@@ -51,7 +51,7 @@ def main():
     dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
                                    transforms.Grayscale(),
                                    transforms.ToTensor(),
-                                   transforms.Normalize(0, 1),
+                                   transforms.Normalize(0, 1),  # (mean,std) --> output = (input - mean) /std
                                   ]))  # convert to greyscale and normalize images
     # image loading
     dataloader_train_CT = torchdata.DataLoader(dataset_CT_train, batch_size=bs, shuffle=True, num_workers=workers)
