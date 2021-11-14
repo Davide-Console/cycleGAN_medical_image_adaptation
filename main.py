@@ -47,7 +47,7 @@ def main():
     # batch number = train dataset / batch size
     workers = 2  # sub processes for data loading
 
-    dataroot = 'Data/CT/Train/'  # Directory con le immagini
+    dataroot = 'Data/CT/Train/'  # Directory with train img
     dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
                                    transforms.Grayscale(),
                                    transforms.ToTensor(),
@@ -57,6 +57,7 @@ def main():
     dataloader_train_CT = torchdata.DataLoader(dataset_CT_train, batch_size=bs, shuffle=True, num_workers=workers)
 
     real_batch = next(iter(dataloader_train_CT))  # equivalent to a "for cycle" for batch load
+    
 
     for i in range(len(real_batch[0])):
         sample = real_batch[0][i]  # Batch[No batch][No img]
@@ -135,13 +136,14 @@ def main():
     G_B2A = Generator().to(device=device)
 
     # Parameters' initialization
-    lr = 0.0002
+    lr = 0.0002 #size of steps taken by gradient descent
     num_epochs = 1
 
     # Loss function
     criterion_Im = torch.nn.L1Loss()
-    # Beta1 hyperparam for Adam optimizers (??? non so se utilizzarlo)
-    # beta1 = 0.5
+    # Beta1 hyperparam for Adam optimizers
+    # beta1 = 0.5 #0,9
+    #beta2 = 0.999
 
     optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=lr)
     optimizer_D_B = torch.optim.Adam(D_B.parameters(), lr=lr)

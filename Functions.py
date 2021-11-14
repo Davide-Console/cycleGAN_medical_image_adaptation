@@ -10,11 +10,11 @@ def image_viewer(image):
     plt.imshow(np.transpose(image, (1, 2, 0)))
 
 
-# Loss Functions
+# Least square loss for discriminator
 def LSGAN_D(real, fake):
     return (torch.mean((real - 1)**2) + torch.mean(fake**2))
 
-
+#least square loss for generator
 def LSGAN_G(fake):
     return (torch.mean((fake - 1)**2))
 
@@ -66,7 +66,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             #tensor_ones = torch.ones([A_real.shape[0],1,14,14])
             #tensor_zeros = torch.zeros([A_real.shape[0],1,14,14])
 
-            # Genrated images using not updeted generators
+            # Genrated images using not updated generators
             B_fake = G_A2B(A_real)
             A_rec = G_B2A(B_fake)
             A_fake = G_B2A(B_real)
@@ -74,23 +74,23 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
     
             
             # Discriminator A training
-            # Compute discriminator loss by feeding real A and fake A samples in the discriminator A
-            optimizer_D_A.zero_grad()
+            # Computes discriminator loss by feeding real A and fake A samples in discriminator A
+            optimizer_D_A.zero_grad() #sets gradient to zero
             if((iters > 0 or epoch > 0) and old and iters % 3 == 0):
                 rand_int = torch.randint(5, old_A_fake.shape[0]-1, (1,1))
                 Disc_loss_A = LSGAN_D(D_A(A_real), D_A(old_A_fake[rand_int-5:rand_int].detach()))
-                D_A_losses.append(Disc_loss_A.item())
+                D_A_losses.append(Disc_loss_A.item()) #puts into matrix
             else:
-                Disc_loss_A = LSGAN_D(D_A(A_real), D_A(A_fake.detach()))
-                D_A_losses.append(Disc_loss_A.item())
+                Disc_loss_A = LSGAN_D(D_A(A_real), D_A(A_fake.detach())) #computes Least Square Loss for discriminator A
+                D_A_losses.append(Disc_loss_A.item()) #puts it into matrix
             
-            Disc_loss_A.backward()
-            optimizer_D_A.step()
+            Disc_loss_A.backward() #calculates backpropagation-derivative of Loss function with attention to weights
+            optimizer_D_A.step() #updates computed values
     
             
             # Discriminator B training
-            # Compute discriminator loss by feeding real B and fake B samples in the discriminator B
-            optimizer_D_B.zero_grad()
+            # Compute discriminator loss by feeding real B and fake B samples in discriminator B
+            optimizer_D_B.zero_grad() #sets gradient descent to zero
             if((iters > 0 or epoch > 0) and old and iters % 3 == 0):
               rand_int = torch.randint(5, old_B_fake.shape[0]-1, (1,1))
               Disc_loss_B = LSGAN_D(D_B(B_real), D_B(old_B_fake[rand_int-5:rand_int].detach()))
@@ -99,20 +99,19 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
               Disc_loss_B = LSGAN_D(D_B(B_real), D_B(B_fake.detach()))
               D_B_losses.append(Disc_loss_B.item())
     
-            Disc_loss_B.backward()
-            optimizer_D_B.step()   
+            Disc_loss_B.backward() #calculates backprop
+            optimizer_D_B.step()   #updates values
     
-            # Generator
-    
+            # Generators' gradients set to zero otherwise it accumulates them
             optimizer_G_A2B.zero_grad()
             optimizer_G_B2A.zero_grad()
     
-            # Fool discriminator: Loss based on how many samples the discriminator has discovered
+            # least square loss for generators: Loss based on how many samples the discriminator has discovered
             Fool_disc_loss_A2B = LSGAN_G(D_B(B_fake))
             Fool_disc_loss_B2A = LSGAN_G(D_A(A_fake))
     
             # Cycle Consistency: Loss based on how much similar the starting image and the reconstructed images are
-            Cycle_loss_A = criterion_Im(A_rec, A_real)*5
+            Cycle_loss_A = criterion_Im(A_rec, A_real)*5 #lambda set to 5 because of Torch convention
             Cycle_loss_B = criterion_Im(B_rec, B_real)*5
     
             # Identity loss: Loss based on how much similar the starting image and the transformed images are
@@ -123,14 +122,14 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             Loss_G = Fool_disc_loss_A2B+Fool_disc_loss_B2A+Cycle_loss_A+Cycle_loss_B+Id_loss_B2A+Id_loss_A2B
             G_losses.append(Loss_G)
     
-            # Backward propagation
+            # Backward propagation: computes derivative of loss function based oh weights
             Loss_G.backward()
             
             
-            # Optimization step
+            # Optimization step: values are updated
             optimizer_G_A2B.step()
             optimizer_G_B2A.step()
-    
+            #puts calculated values in previously created matrixes
             FDL_A2B.append(Fool_disc_loss_A2B)
             FDL_B2A.append(Fool_disc_loss_B2A)
             CL_A.append(Cycle_loss_A)
@@ -140,7 +139,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             disc_A.append(Disc_loss_A)
             disc_B.append(Disc_loss_B)
 
-            # saves old samplesfor successive iterations and epochs
+            # saves old samples for next iterations and epochs
             if(iters == 0 and epoch == 0):
               old_B_fake = B_fake.clone()
               old_A_fake = A_fake.clone()
@@ -153,6 +152,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
               old_A_fake = torch.cat((A_fake.clone(),old_A_fake))
     
             iters += 1
+            
             del data_MR, data_CT, A_real, B_real, A_fake, B_fake
     
     
