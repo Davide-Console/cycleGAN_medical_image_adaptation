@@ -1,5 +1,6 @@
 # Packages
 import multiprocessing
+
 import matplotlib.pyplot as plt
 
 import torch
@@ -7,10 +8,12 @@ import torchvision.datasets as dset
 import torch.utils.data as torchdata
 import torchvision.transforms as transforms
 
+import Functions as Foo
+
 from Models import Generator
 from Models import Discriminator
 
-import Functions as Foo
+
 
 
 # TODO
@@ -18,7 +21,7 @@ import Functions as Foo
 # . sistemare e commentare training loop
 # . sistemare/aggiungere salvataggio finale di modelli (??)
 # . aggiungere gridsearch (ottimizzatore di hyperparameters) (esiste per neural networks? immagino di si) Molto costosa.
-#   Cercare alternative (alvin grid search)
+#   Cercare alternative (alvin grid search?)
 
 
 def main():
@@ -31,27 +34,26 @@ def main():
     # Set device
     torch.cuda.empty_cache()
 
-    '''    QUANDO CUDA NON DARA' PROBLEMI:
+    # QUANDO CUDA NON DARA' PROBLEMI:
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("cuda")
     else:
         device = torch.device("cpu")
-        print("cpu")   '''
+        print("cpu")
 
-    device = torch.device("cpu")
 
     # DATA PREPARATION
     image_size = (256, 256)
     bs = 5  # Batch size
     # batch number = train dataset / batch size
-    workers = 2  # sub processes for data loading
+    workers = 0  # sub processes for data loading
 
     dataroot = 'Data/CT/Train/'  # Directory with train img
     dataset_CT_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
                                    transforms.Grayscale(),
                                    transforms.ToTensor(),
-                                   transforms.Normalize(0, 1),  # (mean,std) --> output = (input - mean) /std
+                                   transforms.Normalize((0,), (1,)),  # (mean,std) --> output = (input - mean) /std
                                   ]))  # convert to greyscale and normalize images
     # image loading
     dataloader_train_CT = torchdata.DataLoader(dataset_CT_train, batch_size=bs, shuffle=True, num_workers=workers)
@@ -71,7 +73,7 @@ def main():
     dataset_CT_test = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
                                    transforms.Grayscale(),
                                    transforms.ToTensor(),
-                                   transforms.Normalize(0, 1),
+                                   transforms.Normalize((0,), (1,)),
                                   ]))
 
     dataloader_test_CT = torchdata.DataLoader(dataset_CT_test, batch_size=bs, shuffle=True, num_workers=workers)
@@ -90,7 +92,7 @@ def main():
     dataset_MR_train = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
                                    transforms.Grayscale(),
                                    transforms.ToTensor(),
-                                   transforms.Normalize(0, 1),
+                                   transforms.Normalize((0,), (1,)),
                                   ]))
 
     dataloader_train_MR = torch.utils.data.DataLoader(dataset_MR_train, batch_size=bs, shuffle=True, num_workers=workers)
@@ -109,7 +111,7 @@ def main():
     dataset_MR_test = dset.ImageFolder(root=dataroot, transform=transforms.Compose([
                                    transforms.Grayscale(),
                                    transforms.ToTensor(),
-                                   transforms.Normalize(0, 1),
+                                   transforms.Normalize((0,), (1,)),
                                   ]))
 
     dataloader_test_MR = torch.utils.data.DataLoader(dataset_MR_test, batch_size=bs, shuffle=True, num_workers=workers)
@@ -123,6 +125,7 @@ def main():
         Foo.image_viewer(sample)
 
     plt.show()
+
 
     # TRAINING MODELS
     # Networks' initialization

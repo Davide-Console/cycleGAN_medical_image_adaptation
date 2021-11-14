@@ -1,7 +1,10 @@
 # Packages
-import torch
-import numpy as np
 import matplotlib.pyplot as plt
+
+import numpy as np
+
+import torch
+
 
 def image_viewer(image):
     # It plots a numpy image
@@ -26,63 +29,59 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
     
     # Lists to keep track of progress
     # img_list = []
-    G_losses = []
-    D_A_losses = []
-    D_B_losses = []
+    G_losses = []  # array with generator losses
+    D_A_losses = []  # array with discriminator A's Least Square Losses
+    D_B_losses = []  # array with discriminator B's Least Square Losses
     
     
-    iters=0
-    FDL_A2B = []
-    FDL_B2A = []
-    CL_A = []
-    CL_B = []
-    ID_B2A = []
-    ID_A2B = []
+    iters = 0
+    Full_Disc_Losses_A2B = []
+    Full_Disc_Losses_B2A = []
+    Cycle_Losses_A = []
+    Cycle_Losses_B = []
+    Identity_Losses_B2A = []
+    Identity_Losses_A2B = []
     disc_A = []
     disc_B = []
     
     
-    FDL_A2B_t = []
-    FDL_B2A_t = []
-    CL_A_t = []
-    CL_B_t = []
-    ID_B2A_t = []
-    ID_A2B_t = []
+    Full_Disc_Losses_A2B_t = []
+    Full_Disc_Losses_B2A_t = []
+    Cycle_Losses_A_t = []
+    Cycle_Losses_B_t = []
+    Identity_Losses_B2A_t = []
+    Identity_Losses_A2B_t = []
     disc_A_t = []
     disc_B_t = []
     
     print("Starting Training Loop...")
     # For each epoch
     for epoch in range(num_epochs):
-        print("epoch")
-        print(epoch)
+        print("epoch", epoch)
         # For each batch in the dataloader
-        for i,(data_CT, data_MR) in enumerate(zip(dataloader_train_CT, dataloader_train_MR),0):
-            print(i)
+        for i, (data_CT, data_MR) in enumerate(zip(dataloader_train_CT, dataloader_train_MR),0):
+            print('batch', i)
             # Set model input
             A_real = data_CT[0].to(device=device)
             B_real = data_MR[0].to(device=device)
-
-            #tensor_ones = torch.ones([A_real.shape[0],1,14,14])
-            #tensor_zeros = torch.zeros([A_real.shape[0],1,14,14])
 
             # Genrated images using not updated generators
             B_fake = G_A2B(A_real)
             A_rec = G_B2A(B_fake)
             A_fake = G_B2A(B_real)
             B_rec = G_A2B(A_fake)
-    
-            
+
+            ones_A = D_A(A_real)
+            zeros_A = D_A(A_fake.detach())
+
+            ones_B = D_B(B_real)
+            zeros_B = D_B(B_fake.detach())
+
             # Discriminator A training
             # Computes discriminator loss by feeding real A and fake A samples in discriminator A
             optimizer_D_A.zero_grad() #sets gradient to zero
-            if((iters > 0 or epoch > 0) and old and iters % 3 == 0):
-                rand_int = torch.randint(5, old_A_fake.shape[0]-1, (1,1))
-                Disc_loss_A = LSGAN_D(D_A(A_real), D_A(old_A_fake[rand_int-5:rand_int].detach()))
-                D_A_losses.append(Disc_loss_A.item()) #puts into matrix
-            else:
-                Disc_loss_A = LSGAN_D(D_A(A_real), D_A(A_fake.detach())) #computes Least Square Loss for discriminator A
-                D_A_losses.append(Disc_loss_A.item()) #puts it into matrix
+            Disc_loss_A = LSGAN_D(ones_A, zeros_A)  # computes Least Square Loss for discriminator A
+            D_A_losses.append(Disc_loss_A.item())  # puts it into array
             
             Disc_loss_A.backward() #calculates backpropagation-derivative of Loss function with attention to weights
             optimizer_D_A.step() #updates computed values
@@ -90,98 +89,77 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             
             # Discriminator B training
             # Compute discriminator loss by feeding real B and fake B samples in discriminator B
-            optimizer_D_B.zero_grad() #sets gradient descent to zero
-            if((iters > 0 or epoch > 0) and old and iters % 3 == 0):
-              rand_int = torch.randint(5, old_B_fake.shape[0]-1, (1,1))
-              Disc_loss_B = LSGAN_D(D_B(B_real), D_B(old_B_fake[rand_int-5:rand_int].detach()))
-              D_B_losses.append(Disc_loss_B.item())
-            else:
-              Disc_loss_B = LSGAN_D(D_B(B_real), D_B(B_fake.detach()))
-              D_B_losses.append(Disc_loss_B.item())
+            optimizer_D_B.zero_grad()
+            Disc_loss_B = LSGAN_D(ones_B, zeros_B)
+            D_B_losses.append(Disc_loss_B.item())
     
-            Disc_loss_B.backward() #calculates backprop
-            optimizer_D_B.step()   #updates values
+            Disc_loss_B.backward()
+            optimizer_D_B.step()
     
             # Generators' gradients set to zero otherwise it accumulates them
             optimizer_G_A2B.zero_grad()
             optimizer_G_B2A.zero_grad()
     
             # least square loss for generators: Loss based on how many samples the discriminator has discovered
-            Fool_disc_loss_A2B = LSGAN_G(D_B(B_fake))
-            Fool_disc_loss_B2A = LSGAN_G(D_A(A_fake))
+            Full_disc_loss_A2B = LSGAN_G(zeros_B)
+            Full_disc_loss_B2A = LSGAN_G(zeros_A)
     
             # Cycle Consistency: Loss based on how much similar the starting image and the reconstructed images are
             Cycle_loss_A = criterion_Im(A_rec, A_real)*5 #lambda set to 5 because of Torch convention
             Cycle_loss_B = criterion_Im(B_rec, B_real)*5
     
             # Identity loss: Loss based on how much similar the starting image and the transformed images are
-            Id_loss_B2A = criterion_Im(G_B2A(A_real), A_real)*10
-            Id_loss_A2B = criterion_Im(G_A2B(B_real), B_real)*10
+            Identity_loss_B2A = criterion_Im(G_B2A(A_real), A_real)*10
+            Identity_loss_A2B = criterion_Im(G_A2B(B_real), B_real)*10
     
             # generator losses: sum of previous generator
-            Loss_G = Fool_disc_loss_A2B+Fool_disc_loss_B2A+Cycle_loss_A+Cycle_loss_B+Id_loss_B2A+Id_loss_A2B
+            Loss_G = Full_disc_loss_A2B+Full_disc_loss_B2A+Cycle_loss_A+Cycle_loss_B+Identity_loss_B2A+Identity_loss_A2B
             G_losses.append(Loss_G)
     
             # Backward propagation: computes derivative of loss function based oh weights
             Loss_G.backward()
-            
-            
+
             # Optimization step: values are updated
             optimizer_G_A2B.step()
             optimizer_G_B2A.step()
+
             #puts calculated values in previously created matrixes
-            FDL_A2B.append(Fool_disc_loss_A2B)
-            FDL_B2A.append(Fool_disc_loss_B2A)
-            CL_A.append(Cycle_loss_A)
-            CL_B.append(Cycle_loss_B)
-            ID_B2A.append(Id_loss_B2A)
-            ID_A2B.append(Id_loss_A2B)
+            Full_Disc_Losses_A2B.append(Full_disc_loss_A2B)
+            Full_Disc_Losses_B2A.append(Full_disc_loss_B2A)
+            Cycle_Losses_A.append(Cycle_loss_A)
+            Cycle_Losses_B.append(Cycle_loss_B)
+            Identity_Losses_B2A.append(Identity_loss_B2A)
+            Identity_Losses_A2B.append(Identity_loss_A2B)
             disc_A.append(Disc_loss_A)
             disc_B.append(Disc_loss_B)
 
             # saves old samples for next iterations and epochs
-            if(iters == 0 and epoch == 0):
-              old_B_fake = B_fake.clone()
-              old_A_fake = A_fake.clone()
-            elif (old_B_fake.shape[0] == bs*5 and B_fake.shape[0]==bs):
-              rand_int = torch.randint(5, 24, (1,1))
-              old_B_fake[rand_int-5:rand_int] = B_fake.clone()
-              old_A_fake[rand_int-5:rand_int] = A_fake.clone()
-            elif(old_B_fake.shape[0]< 25):
-              old_B_fake = torch.cat((B_fake.clone(),old_B_fake))
-              old_A_fake = torch.cat((A_fake.clone(),old_A_fake))
-    
+
             iters += 1
             
             del data_MR, data_CT, A_real, B_real, A_fake, B_fake
     
     
-            print('[%d/%d]\tFDL_A2B: %.4f\tFDL_B2A: %.4f\tCL_A: %.4f\tCL_B: %.4f\tID_B2A: %.4f\tID_A2B: %.4f\tLoss_D_A: %.4f\tLoss_D_B: %.4f'
-                          % (epoch+1, num_epochs, Fool_disc_loss_A2B, Fool_disc_loss_B2A,Cycle_loss_A,Cycle_loss_B,Id_loss_B2A,
-                              Id_loss_A2B, Disc_loss_A.item(), Disc_loss_B.item()))
+            print('[%d/%d]\tFull_Disc_Losses_A2B: %.4f\tFull_Disc_Losses_B2A: %.4f\tCycle_Losses_A: %.4f\tCycle_Losses_B: %.4f\tIdentity_Losses_B2A: %.4f\tIdentity_Losses_A2B: %.4f\tLoss_D_A: %.4f\tLoss_D_B: %.4f'
+                          % (epoch+1, num_epochs, Full_disc_loss_A2B, Full_disc_loss_B2A,Cycle_loss_A,Cycle_loss_B,Identity_loss_B2A,
+                              Identity_loss_A2B, Disc_loss_A.item(), Disc_loss_B.item()))
             
     
-        FDL_A2B_t.append(sum(FDL_A2B)/len(FDL_A2B))
-        FDL_B2A_t.append(sum(FDL_B2A)/len(FDL_B2A))
-        CL_A_t.append(sum(CL_A)/len(CL_A))
-        CL_B_t.append(sum(CL_B)/len(CL_B))
-        ID_B2A_t.append(sum(ID_B2A)/len(ID_B2A))
-        ID_A2B_t.append(sum(ID_A2B)/len(ID_A2B))
+        Full_Disc_Losses_A2B_t.append(sum(Full_Disc_Losses_A2B)/len(Full_Disc_Losses_A2B))
+        Full_Disc_Losses_B2A_t.append(sum(Full_Disc_Losses_B2A)/len(Full_Disc_Losses_B2A))
+        Cycle_Losses_A_t.append(sum(Cycle_Losses_A)/len(Cycle_Losses_A))
+        Cycle_Losses_B_t.append(sum(Cycle_Losses_B)/len(Cycle_Losses_B))
+        Identity_Losses_B2A_t.append(sum(Identity_Losses_B2A)/len(Identity_Losses_B2A))
+        Identity_Losses_A2B_t.append(sum(Identity_Losses_A2B)/len(Identity_Losses_A2B))
         disc_A_t.append(sum(disc_A)/len(disc_A))
         disc_B_t.append(sum(disc_B)/len(disc_B))
     
-        FDL_A2B = []
-        FDL_B2A = []
-        CL_A = []
-        CL_B = []
-        ID_B2A = []
-        ID_A2B = []
+        Full_Disc_Losses_A2B = []
+        Full_Disc_Losses_B2A = []
+        Cycle_Losses_A = []
+        Cycle_Losses_B = []
+        Identity_Losses_B2A = []
+        Identity_Losses_A2B = []
         disc_B = []
         disc_A = []
-    
-#        iters = 0             
-#        save_models(G_A2B, G_B2A, D_A, D_B, name)
-#        if (epoch % 5 == 0):
-#            plot_images_test(dataloader_test_horses, dataloader_zebra_test)
-#         #plot_all_images(4, dataloader_test_horses, dataloader_zebra_test)
-#        return(FDL_A2B_t,FDL_B2A_t,CL_A_t,CL_B_t,ID_B2A_t,ID_A2B_t,disc_A_t,disc_B_t)
+
