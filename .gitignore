@@ -1,0 +1,5 @@
+*.pdf
+*.idea/
+Labs/
+*/__init__.py
+*/__pycache__/

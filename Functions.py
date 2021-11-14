@@ -25,7 +25,7 @@ def LSGAN_G(fake):
 # Train
 def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_B, 
           optimizer_D_A, optimizer_D_B, dataloader_train_CT, 
-          dataloader_train_MR, criterion_Im, device, old=True):
+          dataloader_train_MR, criterion_Im, device):
     
     # Lists to keep track of progress
     # img_list = []
@@ -71,41 +71,36 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             A_fake = G_B2A(B_real)
             B_rec = G_A2B(A_fake)
 
-            ones_A = D_A(A_real)
-            zeros_A = D_A(A_fake.detach())
-
-            ones_B = D_B(B_real)
-            zeros_B = D_B(B_fake.detach())
 
             # Discriminator A training
             # Computes discriminator loss by feeding real A and fake A samples in discriminator A
             optimizer_D_A.zero_grad() #sets gradient to zero
-            Disc_loss_A = LSGAN_D(ones_A, zeros_A)  # computes Least Square Loss for discriminator A
+            Disc_loss_A = LSGAN_D(D_A(A_real), D_A(A_fake.detach()))  # computes Least Square Loss for discriminator A
             D_A_losses.append(Disc_loss_A.item())  # puts it into array
             
-            Disc_loss_A.backward() #calculates backpropagation-derivative of Loss function with attention to weights
+            Disc_loss_A.backward(retain_graph=True) #calculates backpropagation-derivative of Loss function with attention to weights
             optimizer_D_A.step() #updates computed values
     
             
             # Discriminator B training
             # Compute discriminator loss by feeding real B and fake B samples in discriminator B
             optimizer_D_B.zero_grad()
-            Disc_loss_B = LSGAN_D(ones_B, zeros_B)
+            Disc_loss_B = LSGAN_D(D_B(B_real), D_B(B_fake.detach()))
             D_B_losses.append(Disc_loss_B.item())
     
-            Disc_loss_B.backward()
+            Disc_loss_B.backward(retain_graph=True)
             optimizer_D_B.step()
     
             # Generators' gradients set to zero otherwise it accumulates them
             optimizer_G_A2B.zero_grad()
             optimizer_G_B2A.zero_grad()
-    
+
             # least square loss for generators: Loss based on how many samples the discriminator has discovered
-            Full_disc_loss_A2B = LSGAN_G(zeros_B)
-            Full_disc_loss_B2A = LSGAN_G(zeros_A)
+            Full_disc_loss_A2B = LSGAN_G(D_B(B_fake))
+            Full_disc_loss_B2A = LSGAN_G(D_A(A_fake))
     
             # Cycle Consistency: Loss based on how much similar the starting image and the reconstructed images are
-            Cycle_loss_A = criterion_Im(A_rec, A_real)*5 #lambda set to 5 because of Torch convention
+            Cycle_loss_A = criterion_Im(A_rec, A_real)*5  # lambda set to 5 because of Torch convention
             Cycle_loss_B = criterion_Im(B_rec, B_real)*5
     
             # Identity loss: Loss based on how much similar the starting image and the transformed images are
@@ -123,7 +118,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             optimizer_G_A2B.step()
             optimizer_G_B2A.step()
 
-            #puts calculated values in previously created matrixes
+            # Puts calculated values in previously created matrixes
             Full_Disc_Losses_A2B.append(Full_disc_loss_A2B)
             Full_Disc_Losses_B2A.append(Full_disc_loss_B2A)
             Cycle_Losses_A.append(Cycle_loss_A)
@@ -133,7 +128,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
             disc_A.append(Disc_loss_A)
             disc_B.append(Disc_loss_B)
 
-            # saves old samples for next iterations and epochs
+            # Saves old samples for next iterations and epochs
 
             iters += 1
             

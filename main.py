@@ -17,11 +17,9 @@ from Models import Discriminator
 
 
 # TODO
-# . capire se e perchè è utile 'Function' line 143
-# . sistemare e commentare training loop
-# . sistemare/aggiungere salvataggio finale di modelli (??)
-# . aggiungere gridsearch (ottimizzatore di hyperparameters) (esiste per neural networks? immagino di si) Molto costosa.
-#   Cercare alternative (alvin grid search?)
+# . aggiungere score
+# . aggiungere salvataggio e loading di modelli
+# . aggiungere gridsearch (ottimizzatore di hyperparameters). Cercare alternative (alvin grid search?)
 
 
 def main():
@@ -34,13 +32,15 @@ def main():
     # Set device
     torch.cuda.empty_cache()
 
-    # QUANDO CUDA NON DARA' PROBLEMI:
+    ''' QUANDO CUDA NON DARA' PROBLEMI:
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("cuda")
     else:
         device = torch.device("cpu")
-        print("cpu")
+        print("cpu")'''
+        
+    device = torch.device("cpu")
 
 
     # DATA PREPARATION
@@ -140,7 +140,7 @@ def main():
 
     # Parameters' initialization
     lr = 0.0002 #size of steps taken by gradient descent
-    num_epochs = 1
+    num_epochs = 5
 
     # Loss function
     criterion_Im = torch.nn.L1Loss()
