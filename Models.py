@@ -21,7 +21,7 @@ class Generator(nn.Module):
     # PART 1: Encoder --> converts image feature to latent space
     # PART 2: Transformation
     # PART 3: Decoder --> assembles latent representation
-    def __init__(self, f=64, blocks=6):
+    def __init__(self, f=64, blocks=9):
         super(Generator, self).__init__()
         layers = [nn.ReflectionPad2d(3),
                   nn.Conv2d(1, f, 7, 1, 0), nn.InstanceNorm2d(f), nn.ReLU(True),
