@@ -5,6 +5,8 @@ import numpy as np
 
 import torch
 
+from scipy.stats import ks_2samp
+
 
 def image_viewer(image):
     # It plots a numpy image
