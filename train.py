@@ -18,7 +18,6 @@ from Models import Discriminator
 
 # TODO
 # . aggiungere score
-# . aggiungere salvataggio e loading di modelli
 # . aggiungere gridsearch (ottimizzatore di hyperparameters). Cercare alternative (alvin grid search?)
 
 
@@ -140,13 +139,13 @@ def main():
 
     # Parameters' initialization
     lr = 0.0002 #size of steps taken by gradient descent
-    num_epochs = 1
+    num_epochs = 15
 
     # Loss function
     criterion_Im = torch.nn.L1Loss()
     # Beta1 hyperparam for Adam optimizers
     # beta1 = 0.5 #0,9
-    #beta2 = 0.999
+    #beta2 = 0.999 per adam mett dentro
 
     optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=lr)
     optimizer_D_B = torch.optim.Adam(D_B.parameters(), lr=lr)
@@ -155,61 +154,15 @@ def main():
     optimizer_G_B2A = torch.optim.Adam(G_B2A.parameters(), lr=lr)
 
     # Training the models
-    Foo.Train(num_epochs, bs, G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A, D_A, D_B,
+    Foo.Train(num_epochs, G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A, D_A, D_B,
               optimizer_D_A, optimizer_D_B, dataloader_train_CT,
-              dataloader_train_MR, criterion_Im, device)
+              dataloader_train_MR, criterion_Im, dataloader_test_CT, dataloader_test_MR, device)
 
     torch.save(G_A2B.state_dict(), 'genCT2MRI.pth')
     torch.save(G_A2B.state_dict(), 'genMRI2CT.pth')
     torch.save(D_A.state_dict(), 'discriminatorCT.pth')
     torch.save(D_B.state_dict(), 'discriminatorMRI.pth')
 
-    # load data
-    data_CT = next(iter(dataloader_test_CT))
-    data_MR = next(iter(dataloader_test_MR))
-    A_real = data_CT[0].to(device=device)
-    B_real = data_MR[0].to(device=device)
-
-    # generate images
-    B_fake = G_A2B(A_real)
-    A_fake = G_B2A(B_real)
-
-    # plot images
-    for i in range(len(A_real)):
-        # In the plot:
-        # 1st line: Style
-        # 2nd line: Starting image
-        # 3rd line: Generated image
-        sample1 = A_real[i]
-        sample2 = B_real[i]
-        sample3 = A_fake[i]
-        ax = plt.subplot(3, len(A_real), i + 1)
-        ax.axis('off')
-        Foo.image_viewer(sample1)
-        ax = plt.subplot(3, len(A_real), len(A_real) + i + 1)
-        ax.axis('off')
-        Foo.image_viewer(sample2)
-        ax = plt.subplot(3, len(A_real), 2 * len(A_real) + i + 1)
-        ax.axis('off')
-        Foo.image_viewer(sample3)
-
-    plt.show()
-
-    for i in range(len(B_real)):
-        sample1 = B_real[i]
-        sample2 = A_real[i]
-        sample3 = B_fake[i]
-        ax = plt.subplot(3, len(B_real), i + 1)
-        ax.axis('off')
-        Foo.image_viewer(sample1)
-        ax = plt.subplot(3, len(B_real), len(B_real) + i + 1)
-        ax.axis('off')
-        Foo.image_viewer(sample2)
-        ax = plt.subplot(3, len(B_real), 2 * len(B_real) + i + 1)
-        ax.axis('off')
-        Foo.image_viewer(sample3)
-
-    plt.show()
 
 if __name__ == '__main__':
     main()

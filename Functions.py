@@ -11,7 +11,7 @@ from scipy.stats import ks_2samp
 def image_viewer(image):
     # It plots a numpy image
     # INPUT: torch.tensor image
-    image = image.detach().numpy()
+    image = image.detach().to('cpu').numpy()
     plt.imshow(np.transpose(image, (1, 2, 0)))
 
 
@@ -25,9 +25,9 @@ def LSGAN_G(fake):
 
 
 # Train
-def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_B, 
+def Train(num_epochs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_B,
           optimizer_D_A, optimizer_D_B, dataloader_train_CT, 
-          dataloader_train_MR, criterion_Im, device):
+          dataloader_train_MR, criterion_Im, dataloader_test_CT, dataloader_test_MR, device):
     
     # Lists to keep track of progress
     # img_list = []
@@ -150,7 +150,7 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
         Identity_Losses_A2B_t.append(sum(Identity_Losses_A2B)/len(Identity_Losses_A2B))
         disc_A_t.append(sum(disc_A)/len(disc_A))
         disc_B_t.append(sum(disc_B)/len(disc_B))
-    
+
         Full_Disc_Losses_A2B = []
         Full_Disc_Losses_B2A = []
         Cycle_Losses_A = []
@@ -160,3 +160,51 @@ def Train(num_epochs, bs, G_A2B, G_B2A,optimizer_G_A2B, optimizer_G_B2A, D_A, D_
         disc_B = []
         disc_A = []
 
+
+        if ((epoch + 1) % 2) == 0:
+            # load data
+            data_CT = next(iter(dataloader_test_CT))
+            data_MR = next(iter(dataloader_test_MR))
+            A_real = data_CT[0].to(device=device)
+            B_real = data_MR[0].to(device=device)
+
+            # generate images
+            B_fake = G_A2B(A_real)
+            A_fake = G_B2A(B_real)
+
+            # plot images
+            for i in range(len(A_real)):
+                # In the plot:
+                # 1st line: Style
+                # 2nd line: Starting image
+                # 3rd line: Generated image
+                sample1 = A_real[i]
+                sample2 = B_real[i]
+                sample3 = A_fake[i]
+                ax = plt.subplot(3, len(A_real), i + 1)
+                ax.axis('off')
+                image_viewer(sample1)
+                ax = plt.subplot(3, len(A_real), len(A_real) + i + 1)
+                ax.axis('off')
+                image_viewer(sample2)
+                ax = plt.subplot(3, len(A_real), 2 * len(A_real) + i + 1)
+                ax.axis('off')
+                image_viewer(sample3)
+
+            plt.show()
+
+            for i in range(len(B_real)):
+                sample1 = B_real[i]
+                sample2 = A_real[i]
+                sample3 = B_fake[i]
+                ax = plt.subplot(3, len(B_real), i + 1)
+                ax.axis('off')
+                image_viewer(sample1)
+                ax = plt.subplot(3, len(B_real), len(B_real) + i + 1)
+                ax.axis('off')
+                image_viewer(sample2)
+                ax = plt.subplot(3, len(B_real), 2 * len(B_real) + i + 1)
+                ax.axis('off')
+                image_viewer(sample3)
+
+            plt.show()
