@@ -1,32 +1,12 @@
-import cv2
-import csv
-from google.colab import drive
-from google.colab.patches import cv2_imshow
 import matplotlib.pyplot as plt
-import multiprocessing
 import numpy as np
-import os
-import pandas as pd
-from pathlib import Path
-from PIL import Image
-import shutil
-from skimage import data
+import tensorflow as tf
+import torch
+from keras import backend as K
 from skimage import filters
 from skimage.measure import label
-from skimage.util import img_as_ubyte
 from skimage.metrics import structural_similarity as ssim
-from tempfile import NamedTemporaryFile
-import tensorflow as tf
-from keras import backend as K
-import torch
-from torch import nn
-from torchsummary import summary
-import torch.nn.functional as foo
-from torch.utils.data import Subset
-import torchvision.datasets as dset
-import torch.utils.data as torchdata
-import torchvision.transforms as transforms
-from tqdm import tqdm
+
 
 def image_viewer(image):
     """
@@ -239,9 +219,9 @@ def score(imA_real, imA_fake, imB_real, imB_fake):
     dice_coeff_A = np.mean(dice_coeff_array_A)
     dice_coeff_B = np.mean(dice_coeff_array_B)
 
-    # print('DICE COEFFICIENT A:', dice_coeff_A)
-    # print('DICE COEFFICIENT B:', dice_coeff_B)
-
     score_A = 0.85 * simm_CTtoPT + 0.15 * dice_coeff_A
     score_B = 0.85 * simm_PTtoCT + 0.15 * dice_coeff_B
     return score_A, score_B
+
+if __name__ == '__main__':
+    print('Training utils')

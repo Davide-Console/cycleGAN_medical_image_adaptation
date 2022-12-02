@@ -18,8 +18,7 @@ class ResBlock(nn.Module):
     """
     def __init__(self, f):
         super(ResBlock, self).__init__()
-        self.conv = nn.Sequential(nn.Conv2d(f, f, 3, 1, 1), nn.InstanceNorm2d(f), nn.ReLU(),
-                                nn.Conv2d(f, f, 3, 1, 1))
+        self.conv = nn.Sequential(nn.Conv2d(f, f, 3, 1, 1), nn.InstanceNorm2d(f), nn.ReLU(), nn.Conv2d(f, f, 3, 1, 1))
         self.norm = nn.InstanceNorm2d(f)
 
     def forward(self, x):
@@ -66,10 +65,10 @@ class Discriminator(nn.Module):
 
         Parameters
         ----------
-        f : int
-            The number of filters in the first convolutional layer.
-        blocks : int
-            The number of residual blocks in the generator.
+        nc : int
+            The number of channels in the first convolutional layer.
+        ndf : int
+            The number of filters.
     """
     def __init__(self, nc, ndf):
         super(Discriminator, self).__init__()
@@ -119,10 +118,10 @@ if __name__ == '__main__':
     G_B2A = Generator(f, blocks).to(device=device)
 
     print('\nG_A2B\n')
-    print(summary((G_A2B), (1, 256, 256)))
+    print(summary(G_A2B, (1, 256, 256)))
     print('\nG_B2A\n')
-    print(summary((G_B2A), (1, 256, 256)))
+    print(summary(G_B2A, (1, 256, 256)))
     print('\nD_A\n')
-    print(summary((D_A), (1, 256, 256)))
+    print(summary(D_A, (1, 256, 256)))
     print('\nD_B\n')
-    print(summary((D_B), (1, 256, 256)))
+    print(summary(D_B, (1, 256, 256)))
