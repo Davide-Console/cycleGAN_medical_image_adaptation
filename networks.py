@@ -1,32 +1,8 @@
-import cv2
-import csv
-from google.colab import drive
-from google.colab.patches import cv2_imshow
-import matplotlib.pyplot as plt
-import multiprocessing
-import numpy as np
-import os
-import pandas as pd
-from pathlib import Path
-from PIL import Image
-import shutil
-from skimage import data
-from skimage import filters
-from skimage.measure import label
-from skimage.util import img_as_ubyte
-from skimage.metrics import structural_similarity as ssim
-from tempfile import NamedTemporaryFile
-import tensorflow as tf
-from keras import backend as K
 import torch
+import torch.nn.functional as foo
 from torch import nn
 from torchsummary import summary
-import torch.nn.functional as foo
-from torch.utils.data import Subset
-import torchvision.datasets as dset
-import torch.utils.data as torchdata
-import torchvision.transforms as transforms
-from tqdm import tqdm
+
 
 # Generator
 class ResBlock(nn.Module):
@@ -41,28 +17,29 @@ class ResBlock(nn.Module):
             The number of filters in the convolutional layers.
     """
     def __init__(self, f):
-      super(ResBlock, self).__init__()
-      self.conv = nn.Sequential(nn.Conv2d(f, f, 3, 1, 1), nn.InstanceNorm2d(f), nn.ReLU(),
+        super(ResBlock, self).__init__()
+        self.conv = nn.Sequential(nn.Conv2d(f, f, 3, 1, 1), nn.InstanceNorm2d(f), nn.ReLU(),
                                 nn.Conv2d(f, f, 3, 1, 1))
-      self.norm = nn.InstanceNorm2d(f)
+        self.norm = nn.InstanceNorm2d(f)
 
     def forward(self, x):
-      return foo.relu(self.norm(self.conv(x) + x))
+        return foo.relu(self.norm(self.conv(x) + x))
 
-  class Generator(nn.Module):
-      """
-          Generator
 
-          This class takes in a number of arguments and creates a generator.
-
-          Parameters
-          ----------
-          f : int
-              The number of filters in the first convolutional layer.
-          blocks : int
-              The number of residual blocks in the generator.
+class Generator(nn.Module):
     """
-      def __init__(self, f=64, blocks=9):
+        Generator
+
+        This class takes in a number of arguments and creates a generator.
+
+        Parameters
+        ----------
+        f : int
+          The number of filters in the first convolutional layer.
+        blocks : int
+          The number of residual blocks in the generator.
+    """
+    def __init__(self, f, blocks):
         super(Generator, self).__init__()
         layers = [nn.ReflectionPad2d(3),
                   nn.Conv2d(1, f, 7, 1, 0), nn.InstanceNorm2d(f), nn.ReLU(True),
@@ -77,12 +54,11 @@ class ResBlock(nn.Module):
             nn.Tanh()])
         self.conv = nn.Sequential(*layers)
 
-      def forward(self, x):
+    def forward(self, x):
         return self.conv(x)
 
 
-    # Discriminator
-    class Discriminator(nn.Module):
+class Discriminator(nn.Module):
     """
         Discriminator
 
@@ -95,7 +71,7 @@ class ResBlock(nn.Module):
         blocks : int
             The number of residual blocks in the generator.
     """
-      def __init__(self, nc, ndf):
+    def __init__(self, nc, ndf):
         super(Discriminator, self).__init__()
         self.main = nn.Sequential(
             # input is (nc) x 128 x 128
@@ -118,18 +94,35 @@ class ResBlock(nn.Module):
             # state size. 1 x 14 x 14
         )
 
-      def forward(self, input):
+    def forward(self, input):
         return self.main(input)
 
 
 if __name__ == '__main__':
+    # Cuda activation
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print("cuda")
+    else:
+        device = torch.device("cpu")
+        print("cpu")
+
+    nc = 1
+    ndf = 32
+    f = 32
+    blocks = 9
+
     D_A = Discriminator(nc, ndf).to(device=device)
     D_B = Discriminator(nc, ndf).to(device=device)
 
     G_A2B = Generator(f, blocks).to(device=device)
     G_B2A = Generator(f, blocks).to(device=device)
 
-    print('\nG_A2B\n', summary((G_A2B), (1, 256, 256)))
-    print('\nG_B2A\n', summary((G_B2A), (1, 256, 256)))
-    print('\nD_A\n', summary((D_A), (1, 256, 256)))
-    print('\nD_B\n', summary((D_B), (1, 256, 256)))
+    print('\nG_A2B\n')
+    print(summary((G_A2B), (1, 256, 256)))
+    print('\nG_B2A\n')
+    print(summary((G_B2A), (1, 256, 256)))
+    print('\nD_A\n')
+    print(summary((D_A), (1, 256, 256)))
+    print('\nD_B\n')
+    print(summary((D_B), (1, 256, 256)))
