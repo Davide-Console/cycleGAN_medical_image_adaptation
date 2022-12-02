@@ -224,4 +224,4 @@ def score(imA_real, imA_fake, imB_real, imB_fake):
     return score_A, score_B
 
 if __name__ == '__main__':
-    print('Training utils')
+    print('Training utils:\tAll imports done.')

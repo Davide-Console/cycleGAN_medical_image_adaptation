@@ -1,38 +1,16 @@
-import cv2
-import csv
-from google.colab import drive
-from google.colab.patches import cv2_imshow
 import matplotlib.pyplot as plt
-import multiprocessing
 import numpy as np
-import os
 import pandas as pd
-from pathlib import Path
-from PIL import Image
-import shutil
-from skimage import data
-from skimage import filters
-from skimage.measure import label
-from skimage.util import img_as_ubyte
-from skimage.metrics import structural_similarity as ssim
-from tempfile import NamedTemporaryFile
-import tensorflow as tf
-from keras import backend as K
 import torch
-from torch import nn
 from torchsummary import summary
-import torch.nn.functional as foo
-from torch.utils.data import Subset
-import torchvision.datasets as dset
-import torch.utils.data as torchdata
-import torchvision.transforms as transforms
 from tqdm import tqdm
+from training_utils import gradient_penalty, LSGAN_G, image_viewer, score
+from main import path_b, path_img, path_models, path_opt
 
-def Train(num_epochs, discriminators_epochs, n_batches_train, n_batches_validation, G_A2B, G_B2A, optimizer_G_A2B,
-          optimizer_G_B2A,
-          D_A, D_B, optimizer_D_A, optimizer_D_B, Criterion_Im, dataloader_train_CT,
-          dataloader_train_PT, dataloader_test_CT, dataloader_test_PT, LAMBDA_GP, device, sp=0,
-          old_score_A=0, old_score_B=0):
+def train(num_epochs, discriminators_epochs, n_batches_train, n_batches_validation, G_A2B, G_B2A, optimizer_G_A2B,
+          optimizer_G_B2A, D_A, D_B, optimizer_D_A, optimizer_D_B, Criterion_Im, dataloader_train_CT,
+          dataloader_train_PT, dataloader_test_CT, dataloader_test_PT, LAMBDA_GP, device, sp=0, old_score_A=0,
+          old_score_B=0):
     """
         Train the model
         :param num_epochs: number of epochs
@@ -44,7 +22,20 @@ def Train(num_epochs, discriminators_epochs, n_batches_train, n_batches_validati
         :param optimizer_G_A2B: optimizer for generator A to B
         :param optimizer_G_B2A: optimizer for generator B to A
         :param D_A: discriminator A
+        :param optimizer_D_A: optimizer for discriminator A
+        :param optimizer_D_B: optimizer for discriminator A
+        :param Criterion_Im
+        :param dataloader_train_CT
+        :param dataloader_train_PT
+        :param dataloader_test_CT
+        :param dataloader_test_PT
+        :param LAMBDA_GP
+        :param device
+        :param sp
+        :param old_score_A
+        :param old_score_B
     """
+
     iters = 0
     print('\nG_A2B\n', summary((G_A2B), (1, 256, 256)))
     print('\nG_B2A\n', summary((G_B2A), (1, 256, 256)))
