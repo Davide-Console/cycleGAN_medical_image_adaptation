@@ -6,7 +6,7 @@ from PIL import Image
 import PIL
 
 def main():
-    path = 'Data/24759123/20010101/MR3'
+    path = 'Data/24759123/20010101/MR4'
 
     # Convert uint16 .dcm images to uint8 .png images
     dcm_files = [f for f in os.listdir(path) if is_dicom(path+'/'+f)]
@@ -23,7 +23,8 @@ def main():
         img = np.array(img)
         img = resize(img, (256, 256))
         img = gantry_removal(img)
-        img = Image.fromarray(img).convert('L')
+        img = (img * 255).astype(np.uint8)
+        img = Image.fromarray(img)
         img.save(path+'/'+filename)
 
 
