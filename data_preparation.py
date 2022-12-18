@@ -1,12 +1,12 @@
-from data_utils import *
-import imageio
-from skimage.transform import resize
-import matplotlib.image as mpimg
-from PIL import Image
-import PIL
+import argparse
 
-def main():
-    path = 'Data/24759123/20010101/MR4'
+from PIL import Image
+from skimage.transform import resize
+
+from data_utils import *
+
+
+def main(path):
 
     # Convert uint16 .dcm images to uint8 .png images
     dcm_files = [f for f in os.listdir(path) if is_dicom(path+'/'+f)]
@@ -29,4 +29,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        prog='ProgramName',
+        description='What the program does',
+        epilog='Text at the bottom of help')
+    parser.add_argument('-p', '--path', help='path to the images')
+    args = parser.parse_args()
+    if not args.path:
+        path = input('Specify the path to images: ')
+        main(path)
+        exit()
+    main(args.path)
