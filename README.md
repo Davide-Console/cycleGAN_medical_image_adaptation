@@ -63,8 +63,16 @@ python training.py --batch_size 8 --learning_rate 0.0002 --epochs 50 --discrimin
 All these parameters can be changed according to your needs.
 
 - `--discriminators_epochs` refers to the number of epochs through which the discriminators are trained during each epoch (e.g., having `--epochs == 50` and `--discriminators_epochs == 5`, discriminators will be trained for 250 epochs).
-- `--save_figs`: if set to `True`, saves some images for each epoch.
-- `--save_all`: if set to `True`, saves networks and decoders for each epoch.
+
+
+- `--save_figs`: if set to `True`, saves some images for each epoch. After the training, you will have:
+  - `batches` folder with comparison between generated images and real ones.
+  - `images` folder with single images of generated and real images
+
+
+- `--save_all`: if set to `True`, saves networks and decoders for each epoch. After the training, you will have:
+  - `models` folder with best models and possibly models from each epoch
+  - `optimizers` folder with the optimizers of the saved models
 
 ## CycleGan testing
 
