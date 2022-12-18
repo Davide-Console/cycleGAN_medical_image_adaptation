@@ -107,7 +107,7 @@ def main():
         A_fake = G_B2A(B_real)
 
         # saving batchs if save_figs is true
-        if save_figs and i == 0:
+        if save_figs:
             for k in range(len(A_real)):
                 # In the plot:
                 # 1st line: Starting image
@@ -144,26 +144,22 @@ def main():
 
             plt.savefig(path_b + '/batches_CT-->PET-CT_{}.png'.format(epoch + 1))
 
-        A_real = A_real.detach().cpu().numpy()
-        A_fake = A_fake.detach().cpu().numpy()
-        B_real = B_real.detach().cpu().numpy()
-        B_fake = B_fake.detach().cpu().numpy()
-
-        # Saving images if save_figs is true
-        if save_figs and epoch == 0:
             img2 = np.squeeze(A_real[0])
             plt.imsave(path_img + '/photoCT_r_{}.png'.format(epoch + 1), img2, cmap=plt.cm.gray)
 
             img3 = np.squeeze(B_real[0])
             plt.imsave(path_img + '/photoPT_r_{}.png'.format(epoch + 1), img3, cmap=plt.cm.gray)
 
-        if save_figs and i == 0:
             img = np.squeeze(A_fake[0])
             plt.imsave(path_img + '/photoCT_f_{}.png'.format(epoch + 1), img, cmap=plt.cm.gray)
 
             img1 = np.squeeze(B_fake[0])
             plt.imsave(path_img + '/photoPT_f_{}.png'.format(epoch + 1), img1, cmap=plt.cm.gray)
 
+        A_real = A_real.detach().cpu().numpy()
+        A_fake = A_fake.detach().cpu().numpy()
+        B_real = B_real.detach().cpu().numpy()
+        B_fake = B_fake.detach().cpu().numpy()
 
         final_score_A, final_score_B = score(A_real, A_fake, B_real, B_fake)
 
@@ -177,49 +173,6 @@ def main():
 
     print('CT to PET-CT Score:\tmean: ', score_A, '\tstd: ', std_A)
     print('PET-CT to CT Score:\tmean: ', score_B, '\tstd: ', std_B)
-
-    # Saving models current epoch if save_all is True
-    if save_all:
-        torch.save(G_A2B, path_models + '/G_A2B_epoch{}'.format(epoch + 1))
-        torch.save(G_B2A, path_models + '/G_B2A_epoch{}'.format(epoch + 1))
-        torch.save(D_A, path_models + '/D_A_epoch{}'.format(epoch + 1))
-        torch.save(D_B, path_models + '/D_B_epoch{}'.format(epoch + 1))
-        torch.save(optimizer_G_A2B.state_dict(), path_opt + '/opt_G_A2B_epoch{}'.format(epoch + 1))
-        torch.save(optimizer_G_B2A.state_dict(), path_opt + '/opt_G_B2A_epoch{}'.format(epoch + 1))
-        torch.save(optimizer_D_A.state_dict(), path_opt + '/opt_D_A_epoch{}'.format(epoch + 1))
-        torch.save(optimizer_D_B.state_dict(), path_opt + '/opt_D_B_epoch{}'.format(epoch + 1))
-
-    # Saving best model
-    proposition = ((np.mean([score_A, score_B]) > np.mean([old_score_A, old_score_B])) and (
-                max([abs(score_A - old_score_A), abs(score_B - old_score_B)]) > 3 * max(
-            [abs(score_A - old_score_A), abs(score_B - old_score_B)]) and (
-                            abs(score_A - old_score_A) < 0.03 and abs(score_A - old_score_A) < 0.03)))
-
-    if epoch == 0 or (score_A > old_score_A and score_B > old_score_B) or proposition:
-        print('--- -- - NEW BEST MODEL - -- ---')
-        torch.save(G_A2B, path_models + '/best_G_A2B')
-        torch.save(G_B2A, path_models + '/best_G_B2A')
-        torch.save(D_A, path_models + '/best_D_A')
-        torch.save(D_B, path_models + '/best_D_B')
-        torch.save(optimizer_G_A2B.state_dict(), path_opt + '/best_opt_G_A2B')
-        torch.save(optimizer_G_B2A.state_dict(), path_opt + '/best_opt_G_B2A')
-        torch.save(optimizer_D_A.state_dict(), path_opt + '/best_opt_D_A')
-        torch.save(optimizer_D_B.state_dict(), path_opt + '/best_opt_D_B')
-
-    # Saving scores and other stuff
-    old_score_A = score_A
-    old_score_B = score_B
-
-    fields = [epoch, score_A, std_A, score_B, std_B, Disc_loss_A.detach().cpu().numpy(),
-              Disc_loss_B.detach().cpu().numpy(), Loss_G_A2B.detach().cpu().numpy(),
-              Loss_G_B2A.detach().cpu().numpy(), Cycle_loss_A.detach().cpu().numpy(),
-              Cycle_loss_B.detach().cpu().numpy(), Identity_loss_B2A.detach().cpu().numpy(),
-              Identity_loss_A2B.detach().cpu().numpy(), LSloss_A2B.detach().cpu().numpy(),
-              LSloss_B2A.detach().cpu().numpy(), Full_disc_loss_A2B.detach().cpu().numpy(),
-              Full_disc_loss_B2A.detach().cpu().numpy()]
-    with open("score.csv", 'a') as fd:
-        writer = csv.writer(fd)
-        writer.writerow(fields)
 
     torch.cuda.empty_cache()
 

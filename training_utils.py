@@ -184,19 +184,19 @@ def score(imA_real, imA_fake, imB_real, imB_fake):
             The score for domain
     """
     # SSIM
-    simm_CTtoPT_array = []
-    simm_PTtoCT_array = []
+    simm_AtoB_array = []
+    simm_BtoA_array = []
     for i in range(len(imA_real)):
         imA_real_s = np.squeeze(imA_real[i])
         imA_fake_s = np.squeeze(imA_fake[i])
         imB_real_s = np.squeeze(imB_real[i])
         imB_fake_s = np.squeeze(imB_fake[i])
 
-        simm_CTtoPT_array.append(ssim(imA_real_s[32:224, 32:224], imA_fake_s[32:224, 32:224]))
-        simm_PTtoCT_array.append(ssim(imB_real_s[32:224, 32:224], imB_fake_s[32:224, 32:224]))
+        simm_AtoB_array.append(ssim(imA_real_s[32:224, 32:224], imA_fake_s[32:224, 32:224]))
+        simm_BtoA_array.append(ssim(imB_real_s[32:224, 32:224], imB_fake_s[32:224, 32:224]))
 
-    simm_CTtoPT = np.mean(simm_CTtoPT_array)
-    simm_PTtoCT = np.mean(simm_PTtoCT_array)
+    simm_AtoB = np.mean(simm_AtoB_array)
+    simm_BtoA = np.mean(simm_BtoA_array)
 
     # DICE COEFFICIENT
     dice_coeff_array_A = []
@@ -223,8 +223,8 @@ def score(imA_real, imA_fake, imB_real, imB_fake):
     dice_coeff_A = np.mean(dice_coeff_array_A)
     dice_coeff_B = np.mean(dice_coeff_array_B)
 
-    score_A = 0.85 * simm_CTtoPT + 0.15 * dice_coeff_A
-    score_B = 0.85 * simm_PTtoCT + 0.15 * dice_coeff_B
+    score_A = 0.85 * simm_AtoB + 0.15 * dice_coeff_A
+    score_B = 0.85 * simm_BtoA + 0.15 * dice_coeff_B
     return score_A, score_B
 
 
@@ -233,7 +233,7 @@ def train(path_b, path_img, path_models, path_opt, device,
           G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A,
           D_A, D_B, optimizer_D_A, optimizer_D_B,
           Criterion_Im, LAMBDA_GP,
-          dataloader_train_CT, dataloader_train_PT, dataloader_test_CT, dataloader_test_PT,
+          dataloader_train_A, dataloader_train_B, dataloader_test_A, dataloader_test_B,
           sp=0, old_score_A=0, old_score_B=0,
           save_figs=True, save_all=True):
     """
@@ -250,10 +250,10 @@ def train(path_b, path_img, path_models, path_opt, device,
         :param optimizer_D_A: optimizer for discriminator A
         :param optimizer_D_B: optimizer for discriminator A
         :param Criterion_Im
-        :param dataloader_train_CT
-        :param dataloader_train_PT
-        :param dataloader_test_CT
-        :param dataloader_test_PT
+        :param dataloader_train_A
+        :param dataloader_train_B
+        :param dataloader_test_A
+        :param dataloader_test_B
         :param LAMBDA_GP
         :param device
         :param sp
@@ -291,16 +291,16 @@ def train(path_b, path_img, path_models, path_opt, device,
         D_B.train()
 
         # For each batch in the dataloader
-        ITER1 = iter(dataloader_train_CT)
-        ITER2 = iter(dataloader_train_PT)
+        ITER1 = iter(dataloader_train_A)
+        ITER2 = iter(dataloader_train_B)
         for i in range(n_batches_train):
 
-            data_CT = next(ITER1)
-            data_PT = next(ITER2)
+            data_A = next(ITER1)
+            data_B = next(ITER2)
 
             # Set model input
-            A_real = data_CT[0].to(device=device)
-            B_real = data_PT[0].to(device=device)
+            A_real = data_A[0].to(device=device)
+            B_real = data_B[0].to(device=device)
 
             # Generated images using not updated generators
             B_fake = G_A2B(A_real)
@@ -383,17 +383,17 @@ def train(path_b, path_img, path_models, path_opt, device,
         # load data
         validation_score_A = []
         validation_score_B = []
-        ITER1 = iter(dataloader_test_CT)
-        ITER2 = iter(dataloader_test_PT)
+        ITER1 = iter(dataloader_test_A)
+        ITER2 = iter(dataloader_test_B)
         print('Start Model Validation')
 
         for i in tqdm(range(n_batches_validation)):
-            # for data_CTv in dataloader_test_CT:
-            data_CTv = next(ITER1)
-            data_PTv = next(ITER2)
+            # for data_Av in dataloader_test_A:
+            data_Av = next(ITER1)
+            data_Bv = next(ITER2)
 
-            A_real = data_CTv[0].to(device=device)
-            B_real = data_PTv[0].to(device=device)
+            A_real = data_Av[0].to(device=device)
+            B_real = data_Bv[0].to(device=device)
 
             # generate images
             torch.no_grad()
@@ -422,7 +422,7 @@ def train(path_b, path_img, path_models, path_opt, device,
                     ax3.axis('off')
                     image_viewer(sample3)
 
-                plt.savefig(path_b + '/batches_PET-CT-->CT_{}.png'.format(epoch + 1))
+                plt.savefig(path_b + '/batches_B-->A_{}.png'.format(epoch + 1))
 
                 for k in range(len(B_real)):
                     sample1 = A_real[k]
@@ -438,7 +438,7 @@ def train(path_b, path_img, path_models, path_opt, device,
                     ax3.axis('off')
                     image_viewer(sample3)
 
-                plt.savefig(path_b + '/batches_CT-->PET-CT_{}.png'.format(epoch + 1))
+                plt.savefig(path_b + '/batches_A-->B_{}.png'.format(epoch + 1))
 
             A_real = A_real.detach().cpu().numpy()
             A_fake = A_fake.detach().cpu().numpy()
@@ -448,17 +448,17 @@ def train(path_b, path_img, path_models, path_opt, device,
             # Saving images if save_figs is true
             if save_figs and epoch == 0:
                 img2 = np.squeeze(A_real[0])
-                plt.imsave(path_img + '/photoCT_r_{}.png'.format(epoch + 1), img2, cmap=plt.cm.gray)
+                plt.imsave(path_img + '/photoA_r_{}.png'.format(epoch + 1), img2, cmap=plt.cm.gray)
 
                 img3 = np.squeeze(B_real[0])
-                plt.imsave(path_img + '/photoPT_r_{}.png'.format(epoch + 1), img3, cmap=plt.cm.gray)
+                plt.imsave(path_img + '/photoB_r_{}.png'.format(epoch + 1), img3, cmap=plt.cm.gray)
 
             if save_figs and i == 0:
                 img = np.squeeze(A_fake[0])
-                plt.imsave(path_img + '/photoCT_f_{}.png'.format(epoch + 1), img, cmap=plt.cm.gray)
+                plt.imsave(path_img + '/photoA_f_{}.png'.format(epoch + 1), img, cmap=plt.cm.gray)
 
                 img1 = np.squeeze(B_fake[0])
-                plt.imsave(path_img + '/photoPT_f_{}.png'.format(epoch + 1), img1, cmap=plt.cm.gray)
+                plt.imsave(path_img + '/photoB_f_{}.png'.format(epoch + 1), img1, cmap=plt.cm.gray)
 
 
             final_score_A, final_score_B = score(A_real, A_fake, B_real, B_fake)
@@ -471,8 +471,8 @@ def train(path_b, path_img, path_models, path_opt, device,
         std_A = np.std(validation_score_A)
         std_B = np.std(validation_score_B)
 
-        print('CT to PET-CT Score:\tmean: ', score_A, '\tstd: ', std_A)
-        print('PET-CT to CT Score:\tmean: ', score_B, '\tstd: ', std_B)
+        print('A to B Score:\tmean: ', score_A, '\tstd: ', std_A)
+        print('B to A Score:\tmean: ', score_B, '\tstd: ', std_B)
 
         # Saving models current epoch if save_all is True
         if save_all:
