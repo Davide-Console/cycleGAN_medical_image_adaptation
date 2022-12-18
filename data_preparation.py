@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from PIL import Image
 from skimage.transform import resize

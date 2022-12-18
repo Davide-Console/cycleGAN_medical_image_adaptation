@@ -1,12 +1,12 @@
-matplotlib==3.6.2
-numpy==1.23.4
-tensorflow==2.11.0
-torchvision==0.14.0
 pillow==9.2.0
-scikit-image==0.19.3
-keras==2.11.0
-torchsummary==1.5.1
-pandas==1.5.2
---find-links https://download.pytorch.org/whl/torch_stable.html
+scikit-image
+pydicom==2.3.1
+imageio==2.22.4
+numpy==1.23.4
 torch==1.13.0
+torchsummary==1.5.1
+matplotlib==3.6.2
+tensorflow==2.11.0
+keras==2.11.0
 tqdm==4.64.1
+torchvision==0.14.0

@@ -7,13 +7,22 @@
 
 This project requires the following libraries:
 
-- NumPy
-- Pandas
-- Scikit-learn
+- pillow==9.2.0
+- scikit-image
+- pydicom==2.3.1
+- imageio==2.22.4
+- numpy==1.23.4
+- torch==1.13.0
+- torchsummary==1.5.1
+- matplotlib==3.6.2
+- tensorflow==2.11.0
+- keras==2.11.0
+- tqdm==4.64.1
+- torchvision==0.14.0
 
 To install all the requirements, execute on the command prompt:
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Dataset
@@ -21,16 +30,17 @@ The dataset must be positioned into the project folder. It must be organized int
 ```
 project
 └── Data
-    ├── Domain A DICOM images
+    ├── folder1
     │   ├── image000.dcm
     │   ├── image001.dcm
     │   └── ...
-    └── Domain B DICOM images
+    └── folder2
         ├── image000.dcm
         ├── image001.dcm
         └── ...
 
 ```
+`folder1` and `folder2` contain the images corresponding to the two different domains.
 
 ## Offline preprocessing
 All the DICOM images go through the following steps:
