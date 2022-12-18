@@ -81,3 +81,10 @@ To test the models of the cycleGAN for inference, execute:
 ```bash
 python testing.py
 ```
+In alternative, you can execute:
+```bash
+python training.py --batch_size 8 --model1 best_G_A2B --model2 best_G_B2A --test_split 0.1 --save_figs False
+```
+All these parameters can be changed according to your needs.
+- `--model1` and `--model2`: string with the name of the saved models (not path)
+- `--save_figs`: check the training paragraph

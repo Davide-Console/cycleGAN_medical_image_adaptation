@@ -116,5 +116,6 @@ if __name__ == '__main__':
     parser.add_argument('-sf', '--save_figs', type=bool, default=False,
                         help='If True, saves some figures for each epoch')
     args = parser.parse_args()
+    assert args.test_split != 0
 
     main(args)
