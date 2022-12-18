@@ -40,5 +40,5 @@ def is_dicom(filepath):
     try:
         dcm = pd.dcmread(filepath)
         return True
-    except pd.errors.InvalidDicomError:
+    except (pd.errors.InvalidDicomError, IsADirectoryError, FileNotFoundError):
         return False

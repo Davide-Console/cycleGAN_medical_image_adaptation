@@ -1,24 +1,31 @@
 import argparse
+import os
 
 from PIL import Image
 from skimage.transform import resize
 
 from data_utils import *
 
-
 def main(path):
+    dcm_files=[]
 
     # Convert uint16 .dcm images to uint8 .png images
-    dcm_files = [f for f in os.listdir(path) if is_dicom(path+'/'+f)]
+    print('Searching for DICOM files...')
+    for path, subdirs, files in os.walk(path):
+        for f in files:
+            if is_dicom(os.path.join(path, f)):
+                dcm_files.append(os.path.join(path, f))
+        for dir in subdirs:
+                break
+    print('Converting DICOM file to PNG images...')
     for i, filename in enumerate(dcm_files):
-        print(f'Converting {filename} ({i+1}/{len(dcm_files)})')
-        dcm2png(path+'/'+filename)
+        dcm2png(filename)
+
 
     # Set all images to 256x256 and delete gantry
+    print('Preprocessing PNG images...')
     png_files = [f for f in os.listdir(path) if f.endswith('.png')]
     for i, filename in enumerate(png_files):
-        print(f'Processing {filename} ({i+1}/{len(png_files)})')
-
         img = Image.open(path+'/'+filename)
         img = np.array(img)
         img = resize(img, (256, 256))
@@ -33,10 +40,6 @@ if __name__ == '__main__':
         prog='ProgramName',
         description='What the program does',
         epilog='Text at the bottom of help')
-    parser.add_argument('-p', '--path', help='path to the images')
+    parser.add_argument('-p', '--path', default='Data', help='path to the images')
     args = parser.parse_args()
-    if not args.path:
-        path = input('Specify the path to images: ')
-        main(path)
-        exit()
     main(args.path)
