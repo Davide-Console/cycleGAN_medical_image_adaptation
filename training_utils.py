@@ -375,7 +375,7 @@ def train(path_b, path_img, path_models, path_opt, device,
             iters += 1
 
             print(
-                '\t\t\t\t\t\t\tGENERATORS\t\tLoss_G_A2B: %.4f\tLoss_G_B2A: %.4f'
+                '\t\t\t\tGENERATORS\tLoss_G_A2B: %.4f\tLoss_G_B2A: %.4f'
                 % (Loss_G_A2B, Loss_G_B2A))
 
             torch.cuda.empty_cache()

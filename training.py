@@ -1,4 +1,5 @@
 import multiprocessing
+import argparse
 
 import numpy as np
 import torch
@@ -17,7 +18,7 @@ path_models = 'models'
 path_opt = 'optimizers'
 
 
-def main():
+def main(args):
     multiprocessing.freeze_support()
 
     # Random seed
@@ -32,23 +33,13 @@ def main():
         device = torch.device("cpu")
         print("cpu")
 
-    # splitting dataset
-    val_split = 0.5
-    test_split = 0.0
-
-    # HYPERPARAMETERS
-    # data set
-    batch_size = 2
+    # networks HYPERPARAMETERS
     # discriminators
     ndf = 32
     # generators
     f = 32
     blocks = 9
-    # training loss
-    lr = 0.0002
-    num_epochs = 1
-    discriminators_epochs = 3
-    LAMBDA_GP = 10
+    # loss
     Criterion_Im = nn.L1Loss()
 
     # Networks' initialization
@@ -61,11 +52,11 @@ def main():
     G_B2A = Generator(f, blocks).to(device=device)
 
     # Parameters' initialization
-    optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=lr)
-    optimizer_D_B = torch.optim.Adam(D_B.parameters(), lr=lr)
+    optimizer_D_A = torch.optim.Adam(D_A.parameters(), lr=args.learning_rate)
+    optimizer_D_B = torch.optim.Adam(D_B.parameters(), lr=args.learning_rate)
 
-    optimizer_G_A2B = torch.optim.Adam(G_A2B.parameters(), lr=lr)
-    optimizer_G_B2A = torch.optim.Adam(G_B2A.parameters(), lr=lr)
+    optimizer_G_A2B = torch.optim.Adam(G_A2B.parameters(), lr=args.learning_rate)
+    optimizer_G_B2A = torch.optim.Adam(G_B2A.parameters(), lr=args.learning_rate)
 
     # DATA PREPARATION
     dataroot = 'Data/folder1'
@@ -78,18 +69,18 @@ def main():
     dataset_size = len(dataset_domain_A)
     indices = list(range(dataset_size))
 
-    split1 = int(np.floor(test_split * dataset_size))
+    split1 = int(np.floor(args.test_split * dataset_size))
     preparation_indices, test_indices = indices[split1:], indices[:split1]
 
-    split2 = int(np.floor(val_split * len(preparation_indices)))
+    split2 = int(np.floor(args.validation_split * len(preparation_indices)))
     train_indices, val_indices = preparation_indices[split2:], preparation_indices[:split2]
 
     train_dataset_domain_A = Subset(dataset_domain_A, train_indices)
-    train_loader_domain_A = torchdata.DataLoader(train_dataset_domain_A, batch_size=batch_size, shuffle=True,
+    train_loader_domain_A = torchdata.DataLoader(train_dataset_domain_A, batch_size=args.batch_size, shuffle=True,
                                                  drop_last=True)
 
     val_dataset_domain_A = Subset(dataset_domain_A, val_indices)
-    validation_loader_domain_A = torchdata.DataLoader(val_dataset_domain_A, batch_size=batch_size, shuffle=False,
+    validation_loader_domain_A = torchdata.DataLoader(val_dataset_domain_A, batch_size=args.batch_size, shuffle=False,
                                                       drop_last=True)
 
     dataroot = 'Data/folder2'
@@ -100,11 +91,11 @@ def main():
     ]))
 
     train_dataset_domain_B = Subset(dataset_domain_B, train_indices)
-    train_loader_domain_B = torchdata.DataLoader(train_dataset_domain_B, batch_size=batch_size, shuffle=True,
+    train_loader_domain_B = torchdata.DataLoader(train_dataset_domain_B, batch_size=args.batch_size, shuffle=True,
                                                  drop_last=True)
 
     val_dataset_domain_B = Subset(dataset_domain_B, val_indices)
-    validation_loader_domain_B = torchdata.DataLoader(val_dataset_domain_B, batch_size=batch_size, shuffle=False,
+    validation_loader_domain_B = torchdata.DataLoader(val_dataset_domain_B, batch_size=args.batch_size, shuffle=False,
                                                       drop_last=True)
 
     print('Trining set split: {:.2f}%\nValidation set split: {:.2f}%\nTest set split: {:.2f}%'
@@ -117,13 +108,33 @@ def main():
     n_batches_validation = len(validation_loader_domain_A)
 
     train(path_b, path_img, path_models, path_opt, device,
-          num_epochs, discriminators_epochs, n_batches_train, n_batches_validation,
+          args.epochs, args.discriminators_epochs, n_batches_train, n_batches_validation,
           G_A2B, G_B2A, optimizer_G_A2B, optimizer_G_B2A,
           D_A, D_B, optimizer_D_A, optimizer_D_B,
-          Criterion_Im, LAMBDA_GP,
+          Criterion_Im, args.lambda_gp,
           train_loader_domain_A, train_loader_domain_B, validation_loader_domain_A, validation_loader_domain_B,
-          save_figs=True, save_all=False)
+          save_figs=args.save_figs, save_all=args.save_all)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        prog='ProgramName',
+        description='What the program does',
+        epilog='Text at the bottom of help')
+    parser.add_argument('-b', '--batch_size', type=int, default=8, help='batch size')
+    parser.add_argument('-lr', '--learning_rate', type=float, default=0.0002, help='learning rate')
+    parser.add_argument('-e', '--epochs', type=int, default=50, help='number of epochs')
+    parser.add_argument('-de', '--discriminators_epochs', type=int, default=5,
+                        help='number of epochs for the discriminator')
+    parser.add_argument('-lgp', '--lambda_gp', type=int, default=5, help='hyperparameter LAMBDA for gradient penalty')
+    parser.add_argument('-ts', '--test_split', type=float, default=0.1,
+                        help='test/train split. Number correspont to (test set/dataset)')
+    parser.add_argument('-vs', '--validation_split', type=float, default=0.2,
+                        help='validation/train split. Number correspont to (validation set/train set)')
+    parser.add_argument('-sf', '--save_figs', type=bool, default=False,
+                        help='If True, saves some figures for each epoch')
+    parser.add_argument('-sa', '--save_all', type=bool, default=False,
+                        help='If True, saves models and optimizers for each epoch')
+    args = parser.parse_args()
+
+    main(args)

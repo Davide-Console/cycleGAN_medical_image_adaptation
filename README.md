@@ -17,7 +17,7 @@ pip install requirements.txt
 ```
 
 ## Dataset
-The dataset must be organized into the following folders.
+The dataset must be positioned into the project folder. It must be organized into the following structure.
 ```
 project
 └── Data
