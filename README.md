@@ -56,6 +56,15 @@ To train the models of the cycleGAN, execute:
 ```bash
 python training.py
 ```
+In alternative, you can execute:
+```bash
+python training.py --batch_size 8 --learning_rate 0.0002 --epochs 50 --discriminators_epochs 5 --lambda_gp 5 --test_split 0.1 --validation_split 0.2 --save_figs False --save_all False
+```
+All these parameters can be changed according to your needs.
+
+- `--discriminators_epochs` refers to the number of epochs through which the discriminators are trained during each epoch (e.g., having `--epochs == 50` and `--discriminators_epochs == 5`, discriminators will be trained for 250 epochs).
+- `--save_figs`: if set to `True`, saves some images for each epoch.
+- `--save_all`: if set to `True`, saves networks and decoders for each epoch.
 
 ## CycleGan testing
 
