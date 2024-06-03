@@ -1,7 +1,55 @@
 # Domain Adaptation for Medical Images
-## 2021/2022 NECSTLab Project
-- ###  Davide Console ([@Davide-Console](https://github.com/Davide-Console)) <br> davide.console@mail.polimi.it
-- ###  Laura Ginestretti ([@lauraginestretti](https://github.com/lauraginestretti)) <br> laura.ginetretti@mail.polimi.it
+
+## Introduction
+Deep learning is increasingly used in medical imaging to improve the efficiency, accuracy, and reliability of image-based diagnoses. However, it faces challenges such as the need for large datasets, difficulties in data labeling, privacy concerns, and heterogeneous image datasets. These challenges often cause deep learning models to fail in real clinical practice.
+
+This can be resolved by using domain adaptation techniques, such as the proposed CycleGAN. It learns how to separate normalization statistics and align domain distributions to perform bidirectional transformation without needing labeled data for training. This approach allows the same model to be applied on different types of images.
+
+### CycleGAN Architecture
+- Utilized for image-to-image translation, combining three loss components:
+  - **Discriminator Loss**
+  - **Cycle Loss**
+  - **Identity Loss**
+
+![CycleGAN Architecture](path/to/cyclegan_image.png)
+
+## Results
+- **Data Comparisons**:
+  - **PET-CT to CT**: High data similarity, leading to robust model performance.
+  - **MRI dual to MRI spiral**: Low data similarity, presenting more challenges for the model.
+
+![Data Comparison - PET-CT to CT](path/to/petct_ct_image.png)
+![Data Comparison - MRI Dual to MRI Spiral](path/to/mri_dual_spiral_image.png)
+
+- **Evaluation Metrics**:
+  - **Structural Similarity Index (SSIM)**: Measures structure and contrast.
+  - **Dice Coefficient (DICE)**: Measures the overlap of anatomical shapes.
+  - **Score Calculation**: `Score = SSIM x 0.85 + DICE x 0.15`
+
+![Evaluation Metrics](path/to/evaluation_metrics_image.png)
+
+- **Performance Scores**:
+  - CT to PETCT: 
+    - Score: ![Score Chart](path/to/ct_to_petct_score.png)
+  - PETCT to CT: 
+    - Score: ![Score Chart](path/to/petct_to_ct_score.png)
+  - MRI Dual to MRI Spiral: 
+    - Score: ![Score Chart](path/to/mri_dual_spiral_score.png)
+
+![Performance Scores](path/to/performance_scores_image.png)
+
+## Conclusion
+The deep learning model demonstrated robustness, maintaining contrast and anatomical details with consistent performance across different conversion tasks. Future improvements will focus on training with larger datasets and modifying hyperparameters to enhance model performance further. The model will also be tested on more challenging tasks to validate its effectiveness.
+
+
+
+
+
+</br>
+</br>
+
+<details>
+    <summary>Instructions</summary>
 
 ## Dependencies
 
@@ -98,3 +146,9 @@ python training.py --batch_size 8 --model1 best_G_A2B --model2 best_G_B2A --test
 All these parameters can be changed according to your needs.
 - `--model1` and `--model2`: string with the name of the saved models (not path)
 - `--save_figs`: check the training paragraph
+
+</details>
+
+## Authors
+- Davide Console
+- Laura Ginestretti
