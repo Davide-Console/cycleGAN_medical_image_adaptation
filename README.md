@@ -11,32 +11,36 @@ This can be resolved by using domain adaptation techniques, such as the proposed
   - **Cycle Loss**
   - **Identity Loss**
 
-![CycleGAN Architecture](path/to/cyclegan_image.png)
-
 ## Results
 - **Data Comparisons**:
   - **PET-CT to CT**: High data similarity, leading to robust model performance.
   - **MRI dual to MRI spiral**: Low data similarity, presenting more challenges for the model.
 
-![Data Comparison - PET-CT to CT](path/to/petct_ct_image.png)
-![Data Comparison - MRI Dual to MRI Spiral](path/to/mri_dual_spiral_image.png)
+<p align="center"> <img align="center" src="./images/Picture1.png" width="300" /> <p/>
 
 - **Evaluation Metrics**:
   - **Structural Similarity Index (SSIM)**: Measures structure and contrast.
   - **Dice Coefficient (DICE)**: Measures the overlap of anatomical shapes.
   - **Score Calculation**: `Score = SSIM x 0.85 + DICE x 0.15`
 
-![Evaluation Metrics](path/to/evaluation_metrics_image.png)
-
 - **Performance Scores**:
-  - CT to PETCT: 
-    - Score: ![Score Chart](path/to/ct_to_petct_score.png)
-  - PETCT to CT: 
-    - Score: ![Score Chart](path/to/petct_to_ct_score.png)
-  - MRI Dual to MRI Spiral: 
-    - Score: ![Score Chart](path/to/mri_dual_spiral_score.png)
-
-![Performance Scores](path/to/performance_scores_image.png)
+  - CT <--> PET-CT:
+    <p align="center">Plot of the score</p>
+    <p align="center"> <img align="center" src="./images/Picture7.png" width="450" /> <p/>
+    <p align="center">x-axis: epoches [#]; y-axis: performance [%]</p>
+    <p align="center">PET-CT synthetic vs PET-CT real</p>
+    <p align="center"> <img align="center" src="./images/Picture2.png" width="450" /> <p/>
+    <p align="center">CT synthetic vs CT real</p>
+    <p align="center"> <img align="center" src="./images/Picture3.png" width="450" /> <p/>
+  - MRI Dual <--> MRI Spiral: 
+    <p align="center">Plot of the score</p>
+    <p align="center"> <img align="center" src="./images/Picture6.png" width="450" /> <p/>
+    <p align="center">x-axis: epoches [#]; y-axis: performance [%]</p>
+    <p align="center">MRI Dual synthetic vs MRI Dual real</p>
+    <p align="center"> <img align="center" src="./images/Picture4.png" width="450" /> <p/>    
+    <p align="center">MRI Spir synthetic vs MRI Spir real</p>
+    <p align="center"> <img align="center" src="./images/Picture5.png" width="450" /> <p/>
+    
 
 ## Conclusion
 The deep learning model demonstrated robustness, maintaining contrast and anatomical details with consistent performance across different conversion tasks. Future improvements will focus on training with larger datasets and modifying hyperparameters to enhance model performance further. The model will also be tested on more challenging tasks to validate its effectiveness.
