@@ -1,5 +1,5 @@
 # Domain Adaptation for Medical Images
-
+Presented @NECSTResearchLineFairEventFebruary2022
 ## Introduction
 Deep learning is increasingly used in medical imaging to improve the efficiency, accuracy, and reliability of image-based diagnoses. However, it faces challenges such as the need for large datasets, difficulties in data labeling, privacy concerns, and heterogeneous image datasets. These challenges often cause deep learning models to fail in real clinical practice.
 
